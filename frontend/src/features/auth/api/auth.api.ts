@@ -1,5 +1,5 @@
 import { useApi } from '@/composables/useApi';
-import type { LoginPayload, AuthResponse, UserContext } from '@/features/auth/types/auth.types';
+import type { LoginPayload, AuthResponse, User } from '@/features/auth/types/auth.types';
 import type { APIResponse } from '@/types/api.types';
 
 export const authApi = {
@@ -12,7 +12,7 @@ export const authApi = {
   },
   
   getMe() {
-    return useApi().get<APIResponse<UserContext>>('/auth/me');
+    return useApi().get<APIResponse<User>>('/auth/me');
   },
   
   refreshToken() {

@@ -21,6 +21,11 @@ const router = createRouter({
           name: 'home',
           component: () => import('@/features/core/views/HomeView.vue'),
         },
+        {
+          path: 'academic/classes',
+          name: 'academic.classes',
+          component: () => import('@/features/academic/views/ClassesView.vue'),
+        },
       ],
     },
   ],

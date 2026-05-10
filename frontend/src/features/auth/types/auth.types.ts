@@ -20,6 +20,7 @@ export interface AuthResponse {
 }
 
 export interface LoginPayload {
-  username: string; // Used for email or username
+  org_slug: string;
+  email: string;
   password: string;
 }

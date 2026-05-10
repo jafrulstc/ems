@@ -81,6 +81,8 @@ app.openapi = _custom_openapi
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
+app.add_middleware(TenantMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
@@ -88,9 +90,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# TenantMiddleware must be added AFTER CORSMiddleware
-app.add_middleware(TenantMiddleware)
 
 
 # ── Global exception handlers ─────────────────────────────────────────────────

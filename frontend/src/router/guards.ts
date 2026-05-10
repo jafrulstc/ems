@@ -2,10 +2,9 @@ import type { Router } from 'vue-router';
 import { useAuthStore } from '@/features/auth/stores/auth.store';
 
 export function setupGuards(router: Router) {
-  router.beforeEach(async (to, from, next) => {
+  router.beforeEach(async (to, from) => {
     const authStore = useAuthStore();
     
-    // Ensure auth state is initialized (e.g., fetch user profile on first load)
     if (!authStore.initialized) {
       await authStore.fetchMe();
     }
@@ -14,11 +13,9 @@ export function setupGuards(router: Router) {
     const isAuthenticated = authStore.isAuthenticated;
 
     if (requiresAuth && !isAuthenticated) {
-      next({ name: 'login', query: { redirect: to.fullPath } });
+      return { name: 'login', query: { redirect: to.fullPath } };
     } else if (to.name === 'login' && isAuthenticated) {
-      next({ name: 'home' });
-    } else {
-      next();
+      return { name: 'home' };
     }
   });
 }

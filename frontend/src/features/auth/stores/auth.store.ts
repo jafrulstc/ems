@@ -53,8 +53,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
     try {
       const res = await authApi.getMe();
-      user.value = res.data.data.user;
-      permissions.value = res.data.data.permissions;
+      user.value = res.data.data as unknown as User;
+      permissions.value = []; // TODO: implement permission resolving in backend
     } catch (e) {
       clearAuth();
     } finally {
