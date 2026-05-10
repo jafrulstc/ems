@@ -26,6 +26,26 @@ const router = createRouter({
           name: 'academic.classes',
           component: () => import('@/features/academic/views/ClassesView.vue'),
         },
+        {
+          path: 'academic/sections',
+          name: 'academic.sections',
+          component: () => import('@/features/academic/views/SectionsView.vue'),
+        },
+        {
+          path: 'academic/subjects',
+          name: 'academic.subjects',
+          component: () => import('@/features/academic/views/SubjectsView.vue'),
+        },
+        {
+          path: 'academic/guardians',
+          name: 'academic.guardians',
+          component: () => import('@/features/academic/views/GuardiansView.vue'),
+        },
+        {
+          path: 'academic/students',
+          name: 'academic.students',
+          component: () => import('@/features/academic/views/StudentsView.vue'),
+        },
       ],
     },
   ],
