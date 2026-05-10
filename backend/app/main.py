@@ -49,6 +49,36 @@ app = FastAPI(
 )
 
 
+# ── Swagger UI — Bearer token authorization ───────────────────────────────────
+
+def _custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    schema.setdefault("components", {})
+    schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Paste your access token from POST /api/v1/auth/login",
+        }
+    }
+    # Apply globally — individual public endpoints override with security=[]
+    schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = _custom_openapi
+
+
 # ── Middleware ────────────────────────────────────────────────────────────────
 
 app.add_middleware(
@@ -84,10 +114,10 @@ async def health_check():
 # ── Feature routers ───────────────────────────────────────────────────────────
 from app.features.core.router import router as core_router
 from app.features.auth.router import router as auth_router
+from app.features.academic.router import router as academic_router
 app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(academic_router, prefix="/api/v1/academic", tags=["Academic"])
 
-# Phase 4+: from app.features.academic.router import router as academic_router
-#            app.include_router(academic_router, prefix="/api/v1/academic", tags=["Academic"])
 # Phase 5+: from app.features.exam.router import router as exam_router
 #            app.include_router(exam_router, prefix="/api/v1/exam", tags=["Exam"])

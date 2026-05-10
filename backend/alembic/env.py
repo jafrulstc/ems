@@ -24,10 +24,10 @@ from app.features.core import models as core_models          # noqa: F401
 from app.features.core import geo_models as core_geo_models  # noqa: F401
 # Phase 3 (active):
 from app.features.auth import models as auth_models          # noqa: F401
-# Phase 4:
-# from app.features.academic import models as academic_models  # noqa: F401
-# from app.features.academic import guardian_models            # noqa: F401
-# from app.features.academic import enrollment_models          # noqa: F401
+# Phase 4 (active):
+from app.features.academic import models as academic_models          # noqa: F401
+from app.features.academic import guardian_models as academic_guardian_models  # noqa: F401
+from app.features.academic import enrollment_models as academic_enrollment_models  # noqa: F401
 # Phase 5:
 # from app.features.exam import models as exam_models          # noqa: F401
 
