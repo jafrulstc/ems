@@ -113,10 +113,12 @@ async def health_check():
 
 # ── Feature routers ───────────────────────────────────────────────────────────
 from app.features.core.router import router as core_router
+from app.features.core.storage_router import router as storage_router
 from app.features.auth.router import router as auth_router
 from app.features.academic.router import router as academic_router
 from app.features.exam.router import router as exam_router
 app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
+app.include_router(storage_router, prefix="/api/v1/storage", tags=["Storage"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(academic_router, prefix="/api/v1/academic", tags=["Academic"])
 app.include_router(exam_router, prefix="/api/v1/exam", tags=["Exam"])

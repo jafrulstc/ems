@@ -111,3 +111,45 @@ class ResultRead(BaseModel):
     percentage: float; grade: str; grade_point: float
     is_pass: bool; remarks: Optional[str]
     model_config = ConfigDict(from_attributes=True)
+
+# ── ExamBoard ─────────────────────────────────────────────────────────────────
+
+class ExamBoardCreate(BaseModel):
+    name: str
+    code: Optional[str] = None
+    description: Optional[str] = None
+
+class ExamBoardUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+
+class ExamBoardRead(BaseModel):
+    id: int; organization_id: int; name: str
+    code: Optional[str]; description: Optional[str]
+    model_config = ConfigDict(from_attributes=True)
+
+# ── ExamRegistration ──────────────────────────────────────────────────────────
+
+class ExamRegistrationCreate(BaseModel):
+    enrollment_id: int
+    exam_type_id: int
+    exam_board_id: Optional[int] = None
+    board_roll_no: Optional[str] = None
+    board_registration_no: Optional[str] = None
+
+class ExamRegistrationBulkCreate(BaseModel):
+    exam_type_id: int
+    exam_board_id: Optional[int] = None
+    enrollment_ids: List[int]
+
+class ExamRegistrationUpdate(BaseModel):
+    exam_board_id: Optional[int] = None
+    board_roll_no: Optional[str] = None
+    board_registration_no: Optional[str] = None
+
+class ExamRegistrationRead(BaseModel):
+    id: int; organization_id: int; enrollment_id: int
+    exam_type_id: int; exam_board_id: Optional[int]
+    board_roll_no: Optional[str]; board_registration_no: Optional[str]
+    model_config = ConfigDict(from_attributes=True)

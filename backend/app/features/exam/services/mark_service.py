@@ -23,8 +23,17 @@ class MarkService:
         return MarkRead.model_validate(obj)
 
     async def bulk_upsert(self, org_id: int, payload: MarkBulkCreate) -> list[MarkRead]:
+        from app.features.exam.repositories.exam_registration_repo import ExamRegistrationRepository
+        from app.shared.exceptions import bad_request
+        reg_repo = ExamRegistrationRepository(self._repo._db)
+
         results = []
         for entry in payload.entries:
+            # Enforce exam registration
+            reg = await reg_repo.get_by_enroll_exam(entry.enrollment_id, payload.exam_type_id, org_id)
+            if not reg:
+                raise bad_request(f"Enrollment ID {entry.enrollment_id} is not registered for Exam Type ID {payload.exam_type_id}.")
+
             mark = await self._repo.upsert(
                 org_id,
                 entry.enrollment_id,

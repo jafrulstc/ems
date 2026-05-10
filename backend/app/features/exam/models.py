@@ -123,3 +123,35 @@ class Result(Base, StandardMixin):
     grade_point: Mapped[float] = mapped_column(Numeric(4, 2), nullable=False)
     is_pass: Mapped[bool] = mapped_column(Boolean, nullable=False)
     remarks: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+
+class ExamBoard(Base, StandardMixin):
+    """Reference table for external examination boards (e.g., Dhaka Board, Edexcel)."""
+
+    __tablename__ = "exam_boards"
+    __table_args__ = {"schema": "exam"}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class ExamRegistration(Base, StandardMixin):
+    """
+    Links an enrollment to an exam type.
+    Must exist before marks can be entered. If exam_board_id is null, it's an institutional exam.
+    """
+
+    __tablename__ = "exam_registrations"
+    __table_args__ = (
+        UniqueConstraint("enrollment_id", "exam_type_id", name="uq_exam_registration_enroll_exam"),
+        {"schema": "exam"},
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    enrollment_id: Mapped[int] = mapped_column(Integer, ForeignKey("academic.enrollments.id", ondelete="RESTRICT"), nullable=False, index=True)
+    exam_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("exam.exam_types.id", ondelete="RESTRICT"), nullable=False, index=True)
+    exam_board_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("exam.exam_boards.id", ondelete="RESTRICT"), nullable=True, index=True)
+    board_roll_no: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    board_registration_no: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

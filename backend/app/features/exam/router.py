@@ -10,6 +10,8 @@ from app.database import get_db
 from app.dependencies import get_organization_id, require_permission
 from app.features.exam.schemas import (
     AttendanceBulkCreate, AttendanceRead,
+    ExamBoardCreate, ExamBoardRead, ExamBoardUpdate,
+    ExamRegistrationCreate, ExamRegistrationRead, ExamRegistrationUpdate, ExamRegistrationBulkCreate,
     ExamTypeCreate, ExamTypeRead, ExamTypeUpdate,
     GradingRuleCreate, GradingRuleRead,
     GradingSystemCreate, GradingSystemRead, GradingSystemUpdate,
@@ -18,6 +20,8 @@ from app.features.exam.schemas import (
     RoutineCreate, RoutineRead, RoutineUpdate,
 )
 from app.features.exam.services.attendance_result_service import AttendanceService, ResultService
+from app.features.exam.services.exam_board_service import ExamBoardService
+from app.features.exam.services.exam_registration_service import ExamRegistrationService
 from app.features.exam.services.exam_type_service import ExamTypeService, RoutineService
 from app.features.exam.services.grading_service import GradingService
 from app.features.exam.services.mark_service import MarkService
@@ -25,6 +29,77 @@ from app.shared.pagination import PaginationParams, pagination_params
 from app.shared.schemas import APIResponse, PaginatedResponse, ok, paginated
 
 router = APIRouter()
+
+# ── Exam Boards ───────────────────────────────────────────────────────────────
+
+@router.get("/exam-boards", response_model=PaginatedResponse[ExamBoardRead], tags=["Exam Boards"])
+async def list_exam_boards(p: PaginationParams = Depends(pagination_params),
+                           org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
+                           _=Depends(require_permission("exam.exam_boards.view"))):
+    data = await ExamBoardService(db).list(org_id, p)
+    return paginated(data.items, data.total, data.page, data.size)
+
+@router.post("/exam-boards", response_model=APIResponse[ExamBoardRead], status_code=201, tags=["Exam Boards"])
+async def create_exam_board(payload: ExamBoardCreate, org_id: int = Depends(get_organization_id),
+                            db: AsyncSession = Depends(get_db),
+                            _=Depends(require_permission("exam.exam_boards.create"))):
+    return ok(await ExamBoardService(db).create(org_id, payload), "Exam board created.")
+
+@router.get("/exam-boards/{id}", response_model=APIResponse[ExamBoardRead], tags=["Exam Boards"])
+async def get_exam_board(id: int, org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
+                         _=Depends(require_permission("exam.exam_boards.view"))):
+    return ok(await ExamBoardService(db).get(id, org_id))
+
+@router.put("/exam-boards/{id}", response_model=APIResponse[ExamBoardRead], tags=["Exam Boards"])
+async def update_exam_board(id: int, payload: ExamBoardUpdate, org_id: int = Depends(get_organization_id),
+                            db: AsyncSession = Depends(get_db),
+                            _=Depends(require_permission("exam.exam_boards.edit"))):
+    return ok(await ExamBoardService(db).update(id, org_id, payload))
+
+@router.delete("/exam-boards/{id}", response_model=APIResponse[None], tags=["Exam Boards"])
+async def delete_exam_board(id: int, org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
+                            _=Depends(require_permission("exam.exam_boards.delete"))):
+    await ExamBoardService(db).delete(id, org_id)
+    return ok(None, "Exam board deleted.")
+
+# ── Exam Registrations ────────────────────────────────────────────────────────
+
+@router.get("/exam-registrations", response_model=PaginatedResponse[ExamRegistrationRead], tags=["Exam Registrations"])
+async def list_exam_registrations(p: PaginationParams = Depends(pagination_params),
+                                  org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
+                                  _=Depends(require_permission("exam.exam_registrations.view"))):
+    data = await ExamRegistrationService(db).list(org_id, p)
+    return paginated(data.items, data.total, data.page, data.size)
+
+@router.get("/exam-registrations/by-exam/{exam_type_id}", response_model=APIResponse[list[ExamRegistrationRead]], tags=["Exam Registrations"])
+async def exam_registrations_by_exam(exam_type_id: int, org_id: int = Depends(get_organization_id),
+                                     db: AsyncSession = Depends(get_db),
+                                     _=Depends(require_permission("exam.exam_registrations.view"))):
+    return ok(await ExamRegistrationService(db).list_by_exam_type(exam_type_id, org_id))
+
+@router.post("/exam-registrations", response_model=APIResponse[ExamRegistrationRead], status_code=201, tags=["Exam Registrations"])
+async def create_exam_registration(payload: ExamRegistrationCreate, org_id: int = Depends(get_organization_id),
+                                   db: AsyncSession = Depends(get_db),
+                                   _=Depends(require_permission("exam.exam_registrations.create"))):
+    return ok(await ExamRegistrationService(db).create(org_id, payload), "Exam registration created.")
+
+@router.post("/exam-registrations/bulk", response_model=APIResponse[list[ExamRegistrationRead]], status_code=201, tags=["Exam Registrations"])
+async def bulk_create_exam_registration(payload: ExamRegistrationBulkCreate, org_id: int = Depends(get_organization_id),
+                                        db: AsyncSession = Depends(get_db),
+                                        _=Depends(require_permission("exam.exam_registrations.create"))):
+    return ok(await ExamRegistrationService(db).bulk_create(org_id, payload), f"{len(payload.enrollment_ids)} registrations created.")
+
+@router.put("/exam-registrations/{id}", response_model=APIResponse[ExamRegistrationRead], tags=["Exam Registrations"])
+async def update_exam_registration(id: int, payload: ExamRegistrationUpdate, org_id: int = Depends(get_organization_id),
+                                   db: AsyncSession = Depends(get_db),
+                                   _=Depends(require_permission("exam.exam_registrations.edit"))):
+    return ok(await ExamRegistrationService(db).update(id, org_id, payload))
+
+@router.delete("/exam-registrations/{id}", response_model=APIResponse[None], tags=["Exam Registrations"])
+async def delete_exam_registration(id: int, org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
+                                   _=Depends(require_permission("exam.exam_registrations.delete"))):
+    await ExamRegistrationService(db).delete(id, org_id)
+    return ok(None, "Exam registration deleted.")
 
 # ── Exam Types ────────────────────────────────────────────────────────────────
 
