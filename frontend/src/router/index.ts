@@ -46,6 +46,16 @@ const router = createRouter({
           name: 'academic.students',
           component: () => import('@/features/academic/views/StudentsView.vue'),
         },
+        {
+          path: 'reports/academic',
+          name: 'reports.academic',
+          component: () => import('@/features/reports/views/AcademicReportsView.vue'),
+        },
+        {
+          path: 'reports/exam',
+          name: 'reports.exam',
+          component: () => import('@/features/reports/views/ExamReportsView.vue'),
+        },
       ],
     },
   ],

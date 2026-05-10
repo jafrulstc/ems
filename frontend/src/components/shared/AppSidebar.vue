@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue';
 import { useMenuStore } from '@/features/core/stores/menu.store';
 import { usePermission } from '@/features/auth/composables/usePermission';
 import { useRouter, useRoute } from 'vue-router';
+import PanelMenu from 'primevue/panelmenu';
 
 const menuStore = useMenuStore();
 const { hasPermission, isSuperuser } = usePermission();
@@ -32,11 +33,29 @@ const filterMenu = (items: any[]): any[] => {
 
 const visibleMenu = computed(() => filterMenu(menuStore.tree));
 
-const navigate = (routeName: string | null) => {
-  if (routeName) {
-    router.push({ name: routeName }).catch(() => {});
-  }
+// Map the visible backend menu to PrimeVue's PanelMenu structure
+const mapToPanelMenu = (items: any[]): any[] => {
+  return items.map(item => {
+    const transformed: any = {
+      label: item.label,
+      icon: item.icon,
+    };
+    
+    if (item.route_name) {
+      transformed.command = () => {
+        router.push({ name: item.route_name }).catch(() => {});
+      };
+    }
+    
+    if (item.children && item.children.length > 0) {
+      transformed.items = mapToPanelMenu(item.children);
+    }
+    
+    return transformed;
+  });
 };
+
+const panelMenuModel = computed(() => mapToPanelMenu(visibleMenu.value));
 </script>
 
 <template>
@@ -44,45 +63,8 @@ const navigate = (routeName: string | null) => {
     <div v-if="menuStore.loading" class="p-4 text-surface-500">
       Loading menu...
     </div>
-    <ul v-else class="list-none p-4 m-0 flex flex-col gap-2">
-      <template v-for="item in visibleMenu" :key="item.id">
-        <li>
-          <!-- Top level item (Group) -->
-          <div 
-            v-if="item.children && item.children.length > 0"
-            class="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-2 mt-4 select-none"
-          >
-            <i v-if="item.icon" :class="item.icon" class="mr-2"></i>
-            {{ item.label }}
-          </div>
-          
-          <!-- Leaf item if top level has no children but is a link -->
-          <button 
-            v-else
-            @click="navigate(item.route_name)"
-            class="w-full flex items-center p-3 rounded-lg cursor-pointer transition-colors hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-100 font-medium border-none bg-transparent text-left"
-            :class="{ 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400': route.name === item.route_name }"
-          >
-            <i v-if="item.icon" :class="item.icon" class="mr-3 text-lg"></i>
-            {{ item.label }}
-          </button>
-
-          <!-- Children -->
-          <ul v-if="item.children && item.children.length > 0" class="list-none p-0 m-0 flex flex-col gap-1">
-            <li v-for="child in item.children" :key="child.id">
-              <button 
-                @click="navigate(child.route_name)"
-                class="w-full flex items-center p-2 pl-4 rounded-lg cursor-pointer transition-colors hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-600 dark:text-surface-300 border-none bg-transparent text-left"
-                :class="{ 'bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 font-medium': route.name === child.route_name }"
-              >
-                <i v-if="child.icon" :class="child.icon" class="mr-3"></i>
-                <span v-else class="w-2 h-2 rounded-full bg-surface-300 dark:bg-surface-600 mr-4"></span>
-                {{ child.label }}
-              </button>
-            </li>
-          </ul>
-        </li>
-      </template>
-    </ul>
+    <div v-else class="p-3">
+      <PanelMenu :model="panelMenuModel" class="w-full" />
+    </div>
   </aside>
 </template>
