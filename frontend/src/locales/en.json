@@ -1,0 +1,17 @@
+{
+  "app": {
+    "title": "Education Management System",
+    "theme": {
+      "light": "Light Mode",
+      "dark": "Dark Mode"
+    },
+    "language": {
+      "en": "English",
+      "bn": "Bengali"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "overview": "System Overview"
+  }
+}

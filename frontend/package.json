@@ -13,6 +13,7 @@
   "dependencies": {
     "@primeuix/themes": "^2.0.3",
     "@primevue/forms": "^4.5.5",
+    "@tailwindcss/vite": "^4.3.0",
     "@tanstack/vue-query": "^5.100.8",
     "@vueuse/core": "^14.3.0",
     "axios": "^1.16.0",
@@ -21,6 +22,7 @@
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
+    "tailwindcss": "^4.3.0",
     "vue": "^3.5.32",
     "vue-i18n": "^11.4.0",
     "vue-router": "^5.0.4",
