@@ -81,9 +81,10 @@ async def health_check():
     return {"status": "ok", "env": settings.APP_ENV}
 
 
-# ── Feature routers (registered as phases complete) ───────────────────────────
-# Phase 2+: from app.features.core.router import router as core_router
-#            app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
+# ── Feature routers ───────────────────────────────────────────────────────────
+from app.features.core.router import router as core_router
+app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
+
 # Phase 3+: from app.features.auth.router import router as auth_router
 #            app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 # Phase 4+: from app.features.academic.router import router as academic_router

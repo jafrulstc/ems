@@ -19,10 +19,9 @@ from app.config import get_settings
 from app.database import Base
 
 # Feature model imports — must be here for autogenerate to detect all tables.
-# Add each new feature module as it is created in later phases.
-# Phase 2:
-# from app.features.core import models as core_models          # noqa: F401
-# from app.features.core import geo_models as core_geo_models  # noqa: F401
+# Phase 2 (active):
+from app.features.core import models as core_models          # noqa: F401
+from app.features.core import geo_models as core_geo_models  # noqa: F401
 # Phase 3:
 # from app.features.auth import models as auth_models          # noqa: F401
 # Phase 4:
@@ -88,13 +87,16 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    # Use settings URL directly — avoids the alembic.ini placeholder being picked up
+    connectable = create_async_engine(
+        settings.DATABASE_URL,
         poolclass=pool.NullPool,
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
+        await connection.commit()  # ← required: asyncpg never auto-commits DDL
     await connectable.dispose()
 
 
