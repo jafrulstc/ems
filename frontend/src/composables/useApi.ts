@@ -6,9 +6,36 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // For HTTP-only refresh cookies
 });
 
-// Interceptors can be added here later (e.g., for JWT injection)
+// Request Interceptor: Attach access token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Handle 401 globally
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect if unauthorized
+      localStorage.removeItem('access_token');
+      // Use window.location instead of router to avoid circular deps in simple cases
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export function useApi() {
   return apiClient;

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { useUIStore } from '@/stores/ui.store';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
 import { useI18n } from 'vue-i18n';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 const uiStore = useUIStore();
+const authStore = useAuthStore();
+const router = useRouter();
 const { t } = useI18n();
 
 const languages = computed(() => [
@@ -19,6 +23,11 @@ const currentLang = computed({
     if (val) uiStore.setLanguage(val.code as 'en' | 'bn');
   }
 });
+
+const handleLogout = async () => {
+  await authStore.logout();
+  router.push('/login');
+};
 </script>
 
 <template>
@@ -47,6 +56,17 @@ const currentLang = computed({
         text 
         rounded 
         aria-label="Toggle Theme"
+      />
+      
+      <Button 
+        v-if="authStore.isAuthenticated"
+        @click="handleLogout"
+        icon="pi pi-sign-out"
+        severity="danger" 
+        text 
+        rounded 
+        aria-label="Logout"
+        title="Logout"
       />
     </div>
   </div>
