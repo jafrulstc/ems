@@ -74,6 +74,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             request.state.organization_id = int(organization_id)
             request.state.user_id = int(payload.get("sub", 0))
             request.state.roles = payload.get("roles", [])
+            request.state.is_superuser = bool(payload.get("is_superuser", False))
         except JWTError as exc:
             logger.debug("JWT decode failed: %s", exc)
             return JSONResponse(

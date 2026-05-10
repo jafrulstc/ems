@@ -83,10 +83,10 @@ async def health_check():
 
 # ── Feature routers ───────────────────────────────────────────────────────────
 from app.features.core.router import router as core_router
+from app.features.auth.router import router as auth_router
 app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 
-# Phase 3+: from app.features.auth.router import router as auth_router
-#            app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 # Phase 4+: from app.features.academic.router import router as academic_router
 #            app.include_router(academic_router, prefix="/api/v1/academic", tags=["Academic"])
 # Phase 5+: from app.features.exam.router import router as exam_router

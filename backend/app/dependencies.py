@@ -20,10 +20,11 @@ from app.shared.exceptions import forbidden, unauthorized
 class CurrentUser:
     """Lightweight DTO populated from JWT claims on request.state."""
 
-    def __init__(self, user_id: int, organization_id: int, roles: list[int]) -> None:
+    def __init__(self, user_id: int, organization_id: int, roles: list[int], is_superuser: bool = False) -> None:
         self.user_id = user_id
         self.organization_id = organization_id
         self.roles = roles
+        self.is_superuser = is_superuser
 
 
 async def get_current_user(request: Request) -> CurrentUser:
@@ -39,6 +40,7 @@ async def get_current_user(request: Request) -> CurrentUser:
         user_id=user_id,
         organization_id=org_id,
         roles=getattr(request.state, "roles", []),
+        is_superuser=getattr(request.state, "is_superuser", False),
     )
 
 
@@ -72,9 +74,15 @@ def require_permission(permission_key: str) -> Callable:
         db: AsyncSession = Depends(get_db),
         current_user: CurrentUser = Depends(get_current_user),
     ) -> None:
-        # ── Phase 3 will replace the body below with real RBAC logic ──────
-        # Superuser bypass is handled in auth_service; here we trust the JWT.
-        # For Phase 1, we simply verify the user is authenticated (done above).
-        pass  # pragma: no cover — real impl injected in Phase 3
+        # Superusers always pass
+        if getattr(current_user, "is_superuser", False):
+            return
+        # Import here to avoid circular imports at module load time
+        from app.features.auth.repositories.permission_repo import PermissionRepository
+        allowed = await PermissionRepository(db).resolve(
+            current_user.user_id, current_user.organization_id, permission_key
+        )
+        if not allowed:
+            raise forbidden()
 
     return _check
