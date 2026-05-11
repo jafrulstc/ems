@@ -58,7 +58,7 @@ const removeSystem = async (id: number) => {
 </script>
 
 <template>
-  <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+  <div class="ems-card">
     <DataTable v-if="gradingSystems.length" :value="gradingSystems" v-model:expandedRows="expandedRows" stripedRows>
       <Column expander style="width: 3rem" />
       <Column field="name" header="Name" sortable></Column>
@@ -97,32 +97,30 @@ const removeSystem = async (id: number) => {
 
   <!-- Add Rule Dialog -->
   <Dialog v-model:visible="ruleDialogVisible" modal header="Add Grading Rule" :style="{ width: '28rem' }">
-    <div v-if="ruleError" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ ruleError }}
-    </div>
+    <div v-if="ruleError" class="ems-error">{{ ruleError }}</div>
     <div class="flex flex-col gap-4">
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-sm">Grade</label>
+        <div class="ems-field">
+          <label>Grade</label>
           <InputText v-model="ruleForm.grade" placeholder="A+" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-sm">Grade Point</label>
+        <div class="ems-field">
+          <label>Grade Point</label>
           <InputNumber v-model="ruleForm.grade_point" :minFractionDigits="1" :maxFractionDigits="2" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-sm">Min Marks</label>
+        <div class="ems-field">
+          <label>Min Marks</label>
           <InputNumber v-model="ruleForm.min_marks" :minFractionDigits="1" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-sm">Max Marks</label>
+        <div class="ems-field">
+          <label>Max Marks</label>
           <InputNumber v-model="ruleForm.max_marks" :minFractionDigits="1" />
         </div>
       </div>
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-sm">Remarks</label>
+      <div class="ems-field">
+        <label>Remarks</label>
         <InputText v-model="ruleForm.remarks" placeholder="Optional" />
       </div>
     </div>

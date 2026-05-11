@@ -68,24 +68,24 @@ onMounted(() => fetchDropdowns());
       </template>
     </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-5 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800 mb-4">
+    <div class="ems-card mb-4">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Exam Type *</label>
+        <div class="ems-field">
+          <label>Exam Type *</label>
           <Dropdown v-model="selectedExamType" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Select Exam Type" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Class</label>
+        <div class="ems-field">
+          <label>Class</label>
           <Dropdown v-model="selectedClass" :options="classes" optionLabel="name" optionValue="id" placeholder="Select Class" showClear />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Subject *</label>
+        <div class="ems-field">
+          <label>Subject *</label>
           <Dropdown v-model="selectedSubject" :options="classSubjects" optionLabel="name" optionValue="id" placeholder="Select Subject" />
         </div>
       </div>
     </div>
 
-    <div v-if="canShowForm && existingMarks.length" class="card bg-surface-0 dark:bg-surface-900 p-5 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div v-if="canShowForm && existingMarks.length" class="ems-card">
       <MarksEntryForm
         :existing-marks="existingMarks"
         :exam-type-id="selectedExamType!"

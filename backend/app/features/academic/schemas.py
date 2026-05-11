@@ -10,17 +10,19 @@ Gender = Literal["Male", "Female", "Other"]
 
 class ClassCreate(BaseModel):
     name: str
+    name_bn: Optional[str] = None
     numeric_level: Optional[int] = None
     is_active: bool = True
 
 class ClassUpdate(BaseModel):
     name: Optional[str] = None
+    name_bn: Optional[str] = None
     numeric_level: Optional[int] = None
     is_active: Optional[bool] = None
 
 class ClassRead(BaseModel):
     id: int; organization_id: int; name: str
-    numeric_level: Optional[int]; is_active: bool
+    name_bn: Optional[str]; numeric_level: Optional[int]; is_active: bool
     model_config = ConfigDict(from_attributes=True)
 
 # ── Section ───────────────────────────────────────────────────────────────────
@@ -28,29 +30,34 @@ class ClassRead(BaseModel):
 class SectionCreate(BaseModel):
     class_id: int
     name: str
+    name_bn: Optional[str] = None
 
 class SectionUpdate(BaseModel):
     name: Optional[str] = None
+    name_bn: Optional[str] = None
 
 class SectionRead(BaseModel):
     id: int; organization_id: int; class_id: int; name: str
+    name_bn: Optional[str]
     model_config = ConfigDict(from_attributes=True)
 
 # ── Subject ───────────────────────────────────────────────────────────────────
 
 class SubjectCreate(BaseModel):
     name: str
+    name_bn: Optional[str] = None
     code: Optional[str] = None
     is_optional: bool = False
 
 class SubjectUpdate(BaseModel):
     name: Optional[str] = None
+    name_bn: Optional[str] = None
     code: Optional[str] = None
     is_optional: Optional[bool] = None
 
 class SubjectRead(BaseModel):
     id: int; organization_id: int; name: str
-    code: Optional[str]; is_optional: bool
+    name_bn: Optional[str]; code: Optional[str]; is_optional: bool
     model_config = ConfigDict(from_attributes=True)
 
 # ── ClassSubject ──────────────────────────────────────────────────────────────

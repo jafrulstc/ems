@@ -95,7 +95,7 @@ const remove = async (id: number) => {
     </div>
 
     <!-- Exam Types Tab -->
-    <div v-if="activeTab === 'types'" class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div v-if="activeTab === 'types'" class="ems-card">
       <DataTable v-if="examTypes.length" :value="examTypes" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column field="name" header="Name" sortable></Column>
         <Column field="description" header="Description" sortable>

@@ -66,7 +66,6 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
     <nav class="flex-1 overflow-y-auto py-3 px-3">
       <ul class="space-y-1">
         <template v-for="item in visibleMenu" :key="item.id">
-          <!-- Item with children -->
           <li v-if="item.children?.length">
             <div class="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               {{ item.label }}
@@ -76,9 +75,9 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
                 <button
                   @click="child.route_name && navigate(child.route_name)"
                   :class="[
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
                     isActive(child.route_name)
-                      ? 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                      ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
                   ]"
                 >
@@ -88,15 +87,13 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
               </li>
             </ul>
           </li>
-
-          <!-- Item without children -->
           <li v-else>
             <button
               @click="item.route_name && navigate(item.route_name)"
               :class="[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
                 isActive(item.route_name)
-                  ? 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                  ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
               ]"
             >
@@ -139,9 +136,9 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
                 <button
                   @click="child.route_name && navigate(child.route_name)"
                   :class="[
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
                     isActive(child.route_name)
-                      ? 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                      ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
                   ]"
                   :title="collapsed ? child.label : undefined"
@@ -152,14 +149,13 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
               </li>
             </ul>
           </li>
-
           <li v-else>
             <button
               @click="item.route_name && navigate(item.route_name)"
               :class="[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
                 isActive(item.route_name)
-                  ? 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                  ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
               ]"
               :title="collapsed ? item.label : undefined"
@@ -171,5 +167,12 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
         </template>
       </ul>
     </nav>
+
+    <!-- Sidebar footer -->
+    <div class="p-3 border-t border-slate-200 dark:border-slate-800 shrink-0">
+      <div class="text-xs text-center text-slate-400 dark:text-slate-600 truncate">
+        <span v-if="!collapsed">EMS v1.0</span>
+      </div>
+    </div>
   </aside>
 </template>

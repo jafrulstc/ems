@@ -4,16 +4,19 @@ export interface ExamType {
   id: number;
   organization_id: number;
   name: string;
+  name_bn?: string | null;
   description?: string | null;
 }
 
 export interface ExamTypeCreatePayload {
   name: string;
+  name_bn?: string | null;
   description?: string | null;
 }
 
 export interface ExamTypeUpdatePayload {
   name?: string | null;
+  name_bn?: string | null;
   description?: string | null;
 }
 

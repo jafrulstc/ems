@@ -4,6 +4,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import PageHeader from '@/components/shared/PageHeader.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
 import { academicApi } from '../api/academic.api';
 import type { Subject } from '../types/academic.types';
 import SubjectFormDialog from '../components/SubjectFormDialog.vue';
@@ -15,7 +17,6 @@ const canCreate = hasPermission('academic.subjects.create');
 
 const subjects = ref<Subject[]>([]);
 const loading = ref(false);
-
 const dialogVisible = ref(false);
 const editingSubject = ref<Subject | null>(null);
 
@@ -24,69 +25,42 @@ const fetchSubjects = async () => {
   try {
     const res = await academicApi.getSubjects(1, 100);
     subjects.value = res.data.data?.items ?? [];
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
+  } catch (e) { console.error(e); } finally { loading.value = false; }
 };
 
-onMounted(() => {
-  fetchSubjects();
-});
-
-const openNew = () => {
-  editingSubject.value = null;
-  dialogVisible.value = true;
-};
-
-const edit = (data: Subject) => {
-  editingSubject.value = data;
-  dialogVisible.value = true;
-};
+onMounted(() => { fetchSubjects(); });
+const openNew = () => { editingSubject.value = null; dialogVisible.value = true; };
+const edit = (data: Subject) => { editingSubject.value = data; dialogVisible.value = true; };
 </script>
 
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0 m-0">Subjects</h1>
-        <p class="text-surface-500 m-0 mt-1">Manage academic subjects</p>
-      </div>
-      <Button v-if="canCreate" label="Add Subject" icon="pi pi-plus" @click="openNew" />
-    </div>
+    <PageHeader title="Subjects" subtitle="Manage academic subjects" icon="pi pi-book">
+      <template #actions>
+        <Button v-if="canCreate" label="Add Subject" icon="pi pi-plus" @click="openNew" />
+      </template>
+    </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
-      <DataTable :value="subjects" :loading="loading" stripedRows responsiveLayout="scroll">
-        <template #empty>
-          <div class="text-center p-4">No subjects found.</div>
-        </template>
-        
+    <div class="ems-card">
+      <DataTable v-if="subjects.length" :value="subjects" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column field="code" header="Code" sortable style="width: 15%">
-          <template #body="{ data }">
-            {{ data.code ?? '—' }}
-          </template>
+          <template #body="{ data }">{{ data.code ?? '—' }}</template>
         </Column>
-        <Column field="name" header="Subject Name" sortable></Column>
-        
+        <Column field="name" header="Subject Name" sortable />
         <Column header="Type" style="width: 15%">
           <template #body="{ data }">
             <Tag :severity="data.is_optional ? 'info' : 'danger'" :value="data.is_optional ? 'Optional' : 'Mandatory'" />
           </template>
         </Column>
-
         <Column v-if="canEdit" :exportable="false" style="min-width:8rem">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" text rounded severity="success" class="mr-2" @click="edit(slotProps.data)" />
           </template>
         </Column>
       </DataTable>
+      <EmptyState v-else icon="pi pi-book" title="No subjects found" description="Create your first subject to get started" />
     </div>
 
-    <SubjectFormDialog 
-      v-model:visible="dialogVisible" 
-      :edit-data="editingSubject"
-      @saved="fetchSubjects"
-    />
+    <SubjectFormDialog v-model:visible="dialogVisible" :edit-data="editingSubject" @saved="fetchSubjects" />
   </div>
 </template>

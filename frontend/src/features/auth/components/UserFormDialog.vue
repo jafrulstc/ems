@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -66,7 +66,10 @@ watch(roles, (val) => {
   roleOptions.value = val.map(r => ({ label: r.name, value: r.id }));
 }, { immediate: true });
 
-const close = () => emit('update:visible', false);
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (val: boolean) => emit('update:visible', val)
+});
 
 const save = async () => {
   loading.value = true;
@@ -104,7 +107,7 @@ const save = async () => {
       }
     }
     emit('saved');
-    close();
+    dialogVisible.value = false;
   } catch (err: any) {
     errorMsg.value = err.response?.data?.message || 'Failed to save user';
   } finally { loading.value = false; }
@@ -112,31 +115,29 @@ const save = async () => {
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="close" modal :header="editData ? 'Edit User' : 'Create User'" :style="{ width: '32rem' }">
-    <div v-if="errorMsg" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ errorMsg }}
-    </div>
+  <Dialog v-model:visible="dialogVisible" modal :header="editData ? 'Edit User' : 'Create User'" :style="{ width: '32rem' }">
+    <div v-if="errorMsg" class="ems-error">{{ errorMsg }}</div>
     <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-surface-700 dark:text-surface-300">Email *</label>
+      <div class="ems-field">
+        <label>Email *</label>
         <InputText v-model="form.email" :disabled="!!editData" autofocus />
       </div>
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-surface-700 dark:text-surface-300">{{ editData ? 'New Password' : 'Password *' }}</label>
+      <div class="ems-field">
+        <label>{{ editData ? 'New Password' : 'Password *' }}</label>
         <Password v-model="form.password" :feedback="!editData" toggleMask :placeholder="editData ? 'Leave blank to keep' : ''" />
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Username</label>
+        <div class="ems-field">
+          <label>Username</label>
           <InputText v-model="form.username" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Full Name</label>
+        <div class="ems-field">
+          <label>Full Name</label>
           <InputText v-model="form.full_name" />
         </div>
       </div>
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-surface-700 dark:text-surface-300">Roles</label>
+      <div class="ems-field">
+        <label>Roles</label>
         <Dropdown v-model="form.role_ids" :options="roleOptions" optionLabel="label" optionValue="value" multiple placeholder="Select roles" showClear />
       </div>
       <div class="flex items-center gap-6">
@@ -151,7 +152,7 @@ const save = async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" text severity="secondary" @click="close" />
+      <Button label="Cancel" text severity="secondary" @click="dialogVisible = false" />
       <Button label="Save" icon="pi pi-check" @click="save" :loading="loading" />
     </template>
   </Dialog>

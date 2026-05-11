@@ -52,6 +52,11 @@ const router = createRouter({
           component: () => import('@/features/academic/views/EnrollmentsView.vue'),
         },
         {
+          path: 'academic/class-subjects',
+          name: 'academic.class-subjects',
+          component: () => import('@/features/academic/views/ClassSubjectsView.vue'),
+        },
+        {
           path: 'exam/types',
           name: 'exam.types',
           component: () => import('@/features/exam/views/ExamTypesView.vue'),

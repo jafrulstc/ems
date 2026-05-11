@@ -20,6 +20,7 @@ class Class(Base, StandardMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_bn: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     numeric_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
 
@@ -35,6 +36,7 @@ class Section(Base, StandardMixin):
         Integer, ForeignKey("academic.classes.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_bn: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
 
 
 class Subject(Base, StandardMixin):
@@ -45,6 +47,7 @@ class Subject(Base, StandardMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
+    name_bn: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     is_optional: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
 

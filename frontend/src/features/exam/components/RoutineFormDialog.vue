@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
@@ -75,7 +75,10 @@ watch(() => props.visible, (val) => {
   }
 });
 
-const close = () => emit('update:visible', false);
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (val: boolean) => emit('update:visible', val)
+});
 
 const formatDate = (d: Date | null) => d ? d.toISOString().split('T')[0] : null;
 const formatTime = (d: Date | null) => d ? d.toTimeString().slice(0, 5) : null;
@@ -108,7 +111,7 @@ const save = async () => {
       await examApi.createRoutine(payload);
     }
     emit('saved');
-    close();
+    dialogVisible.value = false;
   } catch (err: any) {
     errorMsg.value = err.response?.data?.message || 'Failed to save routine';
   } finally {
@@ -118,48 +121,46 @@ const save = async () => {
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="close" modal :header="editData ? 'Edit Routine' : 'Create Routine'" :style="{ width: '32rem' }">
-    <div v-if="errorMsg" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ errorMsg }}
-    </div>
+  <Dialog v-model:visible="dialogVisible" modal :header="editData ? 'Edit Routine' : 'Create Routine'" :style="{ width: '32rem' }">
+    <div v-if="errorMsg" class="ems-error">{{ errorMsg }}</div>
     <div class="flex flex-col gap-4">
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Exam Type *</label>
+        <div class="ems-field">
+          <label>Exam Type *</label>
           <Dropdown v-model="form.exam_type_id" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Select" :disabled="!!editData" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Academic Year *</label>
+        <div class="ems-field">
+          <label>Academic Year *</label>
           <Dropdown v-model="form.academic_year_id" :options="academicYears" optionLabel="name" optionValue="id" placeholder="Select" :disabled="!!editData" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Class *</label>
+        <div class="ems-field">
+          <label>Class *</label>
           <Dropdown v-model="form.class_id" :options="classes" optionLabel="name" optionValue="id" placeholder="Select" :disabled="!!editData" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Subject *</label>
+        <div class="ems-field">
+          <label>Subject *</label>
           <Dropdown v-model="form.subject_id" :options="subjects" optionLabel="name" optionValue="id" placeholder="Select" :disabled="!!editData" />
         </div>
       </div>
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-surface-700 dark:text-surface-300">Exam Date</label>
+      <div class="ems-field">
+        <label>Exam Date</label>
         <Calendar v-model="form.exam_date" dateFormat="yy-mm-dd" showIcon />
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Start Time</label>
+        <div class="ems-field">
+          <label>Start Time</label>
           <Calendar v-model="form.start_time" :timeOnly="true" hourFormat="24" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">End Time</label>
+        <div class="ems-field">
+          <label>End Time</label>
           <Calendar v-model="form.end_time" :timeOnly="true" hourFormat="24" />
         </div>
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" text severity="secondary" @click="close" />
+      <Button label="Cancel" text severity="secondary" @click="dialogVisible = false" />
       <Button label="Save" icon="pi pi-check" @click="save" :loading="loading" />
     </template>
   </Dialog>

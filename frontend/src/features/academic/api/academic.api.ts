@@ -1,6 +1,11 @@
 import { useApi } from '@/composables/useApi';
 import type { APIResponse, PaginatedResponse } from '@/types/api.types';
-import type { AcademicClass, ClassCreatePayload, ClassUpdatePayload, Section, SectionCreatePayload, SectionUpdatePayload, Subject, SubjectCreatePayload, SubjectUpdatePayload } from '../types/academic.types';
+import type {
+  AcademicClass, ClassCreatePayload, ClassUpdatePayload,
+  Section, SectionCreatePayload, SectionUpdatePayload,
+  Subject, SubjectCreatePayload, SubjectUpdatePayload,
+  ClassSubject, ClassSubjectCreatePayload, ClassSubjectUpdatePayload,
+} from '../types/academic.types';
 
 export const academicApi = {
   // --- Classes ---
@@ -44,5 +49,22 @@ export const academicApi = {
   },
   deleteSubject(id: number) {
     return useApi().delete<APIResponse<null>>(`/academic/subjects/${id}`);
-  }
+  },
+
+  // --- Class Subjects ---
+  getClassSubjects(page = 1, size = 50) {
+    return useApi().get<PaginatedResponse<ClassSubject>>(`/academic/class-subjects?page=${page}&size=${size}`);
+  },
+  getClassSubjectsByClass(classId: number) {
+    return useApi().get<APIResponse<ClassSubject[]>>(`/academic/class-subjects?class_id=${classId}`);
+  },
+  createClassSubject(payload: ClassSubjectCreatePayload) {
+    return useApi().post<APIResponse<ClassSubject>>('/academic/class-subjects', payload);
+  },
+  updateClassSubject(id: number, payload: ClassSubjectUpdatePayload) {
+    return useApi().put<APIResponse<ClassSubject>>(`/academic/class-subjects/${id}`, payload);
+  },
+  deleteClassSubject(id: number) {
+    return useApi().delete<APIResponse<null>>(`/academic/class-subjects/${id}`);
+  },
 };

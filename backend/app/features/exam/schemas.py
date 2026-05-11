@@ -9,14 +9,16 @@ AttendanceStatus = Literal["Present", "Absent", "Late"]
 
 class ExamTypeCreate(BaseModel):
     name: str
+    name_bn: Optional[str] = None
     description: Optional[str] = None
 
 class ExamTypeUpdate(BaseModel):
     name: Optional[str] = None
+    name_bn: Optional[str] = None
     description: Optional[str] = None
 
 class ExamTypeRead(BaseModel):
-    id: int; organization_id: int; name: str; description: Optional[str]
+    id: int; organization_id: int; name: str; name_bn: Optional[str]; description: Optional[str]
     model_config = ConfigDict(from_attributes=True)
 
 # ── ExamRoutine ───────────────────────────────────────────────────────────────

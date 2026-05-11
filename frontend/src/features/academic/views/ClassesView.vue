@@ -4,6 +4,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import PageHeader from '@/components/shared/PageHeader.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
 import { academicApi } from '../api/academic.api';
 import type { AcademicClass } from '../types/academic.types';
 import ClassFormDialog from '../components/ClassFormDialog.vue';
@@ -15,7 +17,6 @@ const canCreate = hasPermission('academic.classes.create');
 
 const classes = ref<AcademicClass[]>([]);
 const loading = ref(false);
-
 const dialogVisible = ref(false);
 const editingClass = ref<AcademicClass | null>(null);
 
@@ -31,62 +32,40 @@ const fetchClasses = async () => {
   }
 };
 
-onMounted(() => {
-  fetchClasses();
-});
+onMounted(() => { fetchClasses(); });
 
-const openNew = () => {
-  editingClass.value = null;
-  dialogVisible.value = true;
-};
-
-const edit = (data: AcademicClass) => {
-  editingClass.value = data;
-  dialogVisible.value = true;
-};
+const openNew = () => { editingClass.value = null; dialogVisible.value = true; };
+const edit = (data: AcademicClass) => { editingClass.value = data; dialogVisible.value = true; };
 </script>
 
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-0 m-0">Classes</h1>
-        <p class="text-surface-500 m-0 mt-1">Manage academic classes and levels</p>
-      </div>
-      <Button v-if="canCreate" label="Add Class" icon="pi pi-plus" @click="openNew" />
-    </div>
+    <PageHeader title="Classes" subtitle="Manage academic classes and levels" icon="pi pi-bookmark">
+      <template #actions>
+        <Button v-if="canCreate" label="Add Class" icon="pi pi-plus" @click="openNew" />
+      </template>
+    </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
-      <DataTable :value="classes" :loading="loading" stripedRows responsiveLayout="scroll">
-        <template #empty>
-          <div class="text-center p-4">No classes found.</div>
-        </template>
-        
+    <div class="ems-card">
+      <DataTable v-if="classes.length" :value="classes" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column field="numeric_level" header="Level" sortable style="width: 15%">
-          <template #body="{ data }">
-            {{ data.numeric_level ?? '—' }}
-          </template>
+          <template #body="{ data }">{{ data.numeric_level ?? '—' }}</template>
         </Column>
-        <Column field="name" header="Name" sortable></Column>
-        
+        <Column field="name" header="Name" sortable />
         <Column header="Status" style="width: 15%">
           <template #body="{ data }">
             <Tag :severity="data.is_active ? 'success' : 'danger'" :value="data.is_active ? 'Active' : 'Inactive'" />
           </template>
         </Column>
-
         <Column v-if="canEdit" :exportable="false" style="min-width:8rem">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" text rounded severity="success" class="mr-2" @click="edit(slotProps.data)" />
           </template>
         </Column>
       </DataTable>
+      <EmptyState v-else icon="pi pi-bookmark" title="No classes found" description="Create your first class to get started" />
     </div>
 
-    <ClassFormDialog 
-      v-model:visible="dialogVisible" 
-      :edit-data="editingClass"
-      @saved="fetchClasses"
-    />
+    <ClassFormDialog v-model:visible="dialogVisible" :edit-data="editingClass" @saved="fetchClasses" />
   </div>
 </template>

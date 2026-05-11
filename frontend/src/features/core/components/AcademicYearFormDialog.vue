@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Checkbox from 'primevue/checkbox';
@@ -44,7 +44,10 @@ watch(() => props.visible, (val) => {
   }
 });
 
-const close = () => emit('update:visible', false);
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (val: boolean) => emit('update:visible', val)
+});
 
 const formatDate = (d: Date | null) => d ? d.toISOString().split('T')[0] : null;
 
@@ -74,7 +77,7 @@ const save = async () => {
       await academicYearApi.createAcademicYear(payload);
     }
     emit('saved');
-    close();
+    dialogVisible.value = false;
   } catch (err: any) {
     errorMsg.value = err.response?.data?.message || 'Failed to save academic year';
   } finally { loading.value = false; }
@@ -82,22 +85,20 @@ const save = async () => {
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="close" modal :header="editData ? 'Edit Academic Year' : 'Create Academic Year'" :style="{ width: '28rem' }">
-    <div v-if="errorMsg" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ errorMsg }}
-    </div>
+  <Dialog v-model:visible="dialogVisible" modal :header="editData ? 'Edit Academic Year' : 'Create Academic Year'" :style="{ width: '28rem' }">
+    <div v-if="errorMsg" class="ems-error">{{ errorMsg }}</div>
     <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2">
-        <label class="font-medium text-surface-700 dark:text-surface-300">Name *</label>
+      <div class="ems-field">
+        <label>Name *</label>
         <InputText v-model="form.name" placeholder="e.g. 2025-2026" autofocus />
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Start Date *</label>
+        <div class="ems-field">
+          <label>Start Date *</label>
           <Calendar v-model="form.start_date" dateFormat="yy-mm-dd" showIcon />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">End Date *</label>
+        <div class="ems-field">
+          <label>End Date *</label>
           <Calendar v-model="form.end_date" dateFormat="yy-mm-dd" showIcon />
         </div>
       </div>
@@ -107,7 +108,7 @@ const save = async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" text severity="secondary" @click="close" />
+      <Button label="Cancel" text severity="secondary" @click="dialogVisible = false" />
       <Button label="Save" icon="pi pi-check" @click="save" :loading="loading" />
     </template>
   </Dialog>

@@ -48,7 +48,7 @@ const remove = async (id: number) => {
       </template>
     </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div class="ems-card">
       <DataTable v-if="academicYears.length" :value="academicYears" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column field="name" header="Name" sortable></Column>
         <Column field="start_date" header="Start Date" sortable></Column>

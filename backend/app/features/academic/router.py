@@ -9,7 +9,7 @@ from app.database import get_db
 from app.dependencies import get_organization_id, require_permission
 from app.features.academic.schemas import (
     ClassCreate, ClassRead, ClassUpdate,
-    ClassSubjectCreate, ClassSubjectRead,
+    ClassSubjectCreate, ClassSubjectRead, ClassSubjectUpdate,
     EnrollmentCreate, EnrollmentRead, EnrollmentUpdate,
     GuardianCreate, GuardianRead, GuardianUpdate,
     SectionCreate, SectionRead, SectionUpdate,
@@ -126,11 +126,14 @@ async def delete_subject(id: int, org_id: int = Depends(get_organization_id), db
 # ── Class Subjects ────────────────────────────────────────────────────────────
 
 @router.get("/class-subjects", response_model=PaginatedResponse[ClassSubjectRead], tags=["Class Subjects"])
-async def list_class_subjects(p: PaginationParams = Depends(pagination_params),
+async def list_class_subjects(class_id: Optional[int] = None, p: PaginationParams = Depends(pagination_params),
                                org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
                                _=Depends(require_permission("academic.class_subjects.view"))):
     from app.features.academic.repositories.class_subject_repo import ClassSubjectRepository
     repo = ClassSubjectRepository(db)
+    if class_id:
+        items = await repo.get_by_class(class_id, org_id)
+        return paginated([ClassSubjectRead.model_validate(i) for i in items], len(items), 1, len(items))
     items, total = await repo.get_many(org_id, p.offset, p.limit)
     return paginated([ClassSubjectRead.model_validate(i) for i in items], total, p.page, p.size)
 
@@ -140,6 +143,32 @@ async def create_class_subject(payload: ClassSubjectCreate, org_id: int = Depend
                                 _=Depends(require_permission("academic.class_subjects.create"))):
     svc = EnrollmentService(db)
     return ok(await svc.class_subject_service(org_id, payload), "Class subject mapped.")
+
+@router.put("/class-subjects/{id}", response_model=APIResponse[ClassSubjectRead], tags=["Class Subjects"])
+async def update_class_subject(id: int, payload: ClassSubjectUpdate, org_id: int = Depends(get_organization_id),
+                                db: AsyncSession = Depends(get_db),
+                                _=Depends(require_permission("academic.class_subjects.edit"))):
+    from app.features.academic.repositories.class_subject_repo import ClassSubjectRepository
+    from app.shared.exceptions import not_found
+    repo = ClassSubjectRepository(db)
+    obj = await repo.get_by_id(id, org_id)
+    if not obj:
+        raise not_found("Class Subject")
+    obj = await repo.update(obj, payload.model_dump(exclude_none=True))
+    return ok(ClassSubjectRead.model_validate(obj))
+
+@router.delete("/class-subjects/{id}", response_model=APIResponse[None], tags=["Class Subjects"])
+async def delete_class_subject(id: int, org_id: int = Depends(get_organization_id),
+                                db: AsyncSession = Depends(get_db),
+                                _=Depends(require_permission("academic.class_subjects.delete"))):
+    from app.features.academic.repositories.class_subject_repo import ClassSubjectRepository
+    from app.shared.exceptions import not_found
+    repo = ClassSubjectRepository(db)
+    obj = await repo.get_by_id(id, org_id)
+    if not obj:
+        raise not_found("Class Subject")
+    await repo.soft_delete(obj)
+    return ok(None, "Class subject deleted.")
 
 # ── Students ──────────────────────────────────────────────────────────────────
 

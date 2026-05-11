@@ -38,9 +38,6 @@ const userMenuItems = computed(() => [
   { separator: true },
   { label: authStore.user?.email || '', disabled: true, class: 'text-xs text-slate-400' },
   { separator: true },
-  { label: t('app.theme.light'), icon: 'pi pi-sun', command: () => { if (uiStore.theme === 'dark') uiStore.toggleTheme(); } },
-  { label: t('app.theme.dark'), icon: 'pi pi-moon', command: () => { if (uiStore.theme === 'light') uiStore.toggleTheme(); } },
-  { separator: true },
   { label: 'Sign Out', icon: 'pi pi-sign-out', command: () => { authStore.logout(); router.push('/login'); } }
 ]);
 
@@ -54,8 +51,18 @@ const pageTitle = computed(() => {
     'academic.subjects': 'Subjects',
     'academic.students': 'Students',
     'academic.guardians': 'Guardians',
+    'academic.class-subjects': 'Class Subjects',
+    'academic.enrollments': 'Enrollments',
+    'exam.marks': 'Marks Entry',
+    'exam.results': 'Results',
+    'exam.routines': 'Exam Routines',
+    'exam.exam-types': 'Exam Configuration',
     'reports.academic': 'Academic Reports',
     'reports.exam': 'Exam Reports',
+    'settings': 'Settings',
+    'academic-years': 'Academic Years',
+    'users': 'Users',
+    'roles': 'Roles',
   };
   return map[name] || name;
 });
@@ -102,6 +109,17 @@ const toggleUserMenu = (event: Event) => {
         class="w-20 text-sm"
       />
 
+      <!-- Theme toggle -->
+      <Button
+        @click="uiStore.toggleTheme"
+        :icon="uiStore.isDark ? 'pi pi-sun' : 'pi pi-moon'"
+        severity="secondary"
+        text
+        rounded
+        :aria-label="uiStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        v-tooltip.bottom="uiStore.isDark ? 'Light Mode' : 'Dark Mode'"
+      />
+
       <!-- Notification placeholder -->
       <Button
         icon="pi pi-bell"
@@ -116,7 +134,7 @@ const toggleUserMenu = (event: Event) => {
       <!-- User avatar -->
       <button
         @click="toggleUserMenu"
-        class="ml-1 flex items-center gap-2 cursor-pointer rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+        class="ml-1 flex items-center gap-2 cursor-pointer rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         aria-label="User menu"
       >
         <div class="avatar-initials bg-primary-600 text-white text-xs">

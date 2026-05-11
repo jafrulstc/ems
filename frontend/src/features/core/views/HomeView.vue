@@ -67,7 +67,7 @@ const statCards = computed(() => [
 
     <!-- Stats grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-      <div v-for="card in statCards" :key="card.label" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 card-hover">
+      <div v-for="card in statCards" :key="card.label" class="ems-card">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ card.label }}</p>
@@ -87,25 +87,25 @@ const statCards = computed(() => [
     <div>
       <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <router-link to="/academic/students" class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 card-hover cursor-pointer no-underline">
+        <router-link to="/academic/students" class="flex items-center gap-3 ems-card cursor-pointer no-underline">
           <div class="w-9 h-9 rounded-lg bg-primary-50 dark:bg-primary-950 flex items-center justify-center">
             <i class="pi pi-user-plus text-primary-600 dark:text-primary-400 text-sm" />
           </div>
           <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Add Student</span>
         </router-link>
-        <router-link to="/academic/classes" class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 card-hover cursor-pointer no-underline">
+        <router-link to="/academic/classes" class="flex items-center gap-3 ems-card cursor-pointer no-underline">
           <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950 flex items-center justify-center">
             <i class="pi pi-bookmark text-amber-600 dark:text-amber-400 text-sm" />
           </div>
           <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Manage Classes</span>
         </router-link>
-        <router-link to="/academic/subjects" class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 card-hover cursor-pointer no-underline">
+        <router-link to="/academic/subjects" class="flex items-center gap-3 ems-card cursor-pointer no-underline">
           <div class="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center">
             <i class="pi pi-book text-purple-600 dark:text-purple-400 text-sm" />
           </div>
           <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Subjects</span>
         </router-link>
-        <router-link to="/reports/academic" class="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 card-hover cursor-pointer no-underline">
+        <router-link to="/reports/academic" class="flex items-center gap-3 ems-card cursor-pointer no-underline">
           <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
             <i class="pi pi-chart-bar text-blue-600 dark:text-blue-400 text-sm" />
           </div>
@@ -115,7 +115,7 @@ const statCards = computed(() => [
     </div>
 
     <!-- Recent activity placeholder -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+    <div class="ems-card">
       <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Activity</h2>
       <div class="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-600">
         <i class="pi pi-clock text-4xl mb-3" />

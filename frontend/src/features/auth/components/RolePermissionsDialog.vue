@@ -43,7 +43,10 @@ watch(() => props.visible, async (val) => {
   } catch (e) { console.error(e); } finally { loading.value = false; }
 });
 
-const close = () => emit('update:visible', false);
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (val: boolean) => emit('update:visible', val)
+});
 
 const toggleAll = (module: string, perms: PermissionRead[]) => {
   const keys = perms.map(p => p.key);
@@ -63,7 +66,7 @@ const save = async () => {
   try {
     await roleApi.assignPermissions(props.role.id, selectedKeys.value);
     emit('saved');
-    close();
+    dialogVisible.value = false;
   } catch (err: any) {
     errorMsg.value = err.response?.data?.message || 'Failed to assign permissions';
   } finally { saving.value = false; }
@@ -71,10 +74,8 @@ const save = async () => {
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="close" modal :header="`Permissions — ${role?.name ?? ''}`" :style="{ width: '42rem' }">
-    <div v-if="errorMsg" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ errorMsg }}
-    </div>
+  <Dialog v-model:visible="dialogVisible" modal :header="`Permissions — ${role?.name ?? ''}`" :style="{ width: '42rem' }">
+    <div v-if="errorMsg" class="ems-error">{{ errorMsg }}</div>
     <div v-if="loading" class="text-center py-8 text-surface-500">Loading permissions...</div>
     <div v-else class="max-h-96 overflow-y-auto flex flex-col gap-6">
       <div v-for="(perms, module) in permissionsByModule" :key="module">
@@ -98,7 +99,7 @@ const save = async () => {
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" text severity="secondary" @click="close" />
+      <Button label="Cancel" text severity="secondary" @click="dialogVisible = false" />
       <Button label="Assign" icon="pi pi-check" @click="save" :loading="saving" />
     </template>
   </Dialog>

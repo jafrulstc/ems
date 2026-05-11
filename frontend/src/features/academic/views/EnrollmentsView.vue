@@ -77,7 +77,7 @@ const remove = async (id: number) => {
       </template>
     </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div class="ems-card">
       <DataTable v-if="enrollments.length" :value="enrollments" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column header="Student" sortable>
           <template #body="{ data }">{{ studentMap.get(data.student_id) ?? data.student_id }}</template>

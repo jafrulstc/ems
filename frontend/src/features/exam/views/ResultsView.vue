@@ -83,14 +83,14 @@ const generateResults = async () => {
       </template>
     </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-5 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800 mb-4">
-      <div class="w-full md:w-64">
-        <label class="font-medium text-surface-700 dark:text-surface-300 mb-2 block">Select Exam Type</label>
+    <div class="ems-card mb-4">
+      <div class="w-full md:w-64 ems-field">
+        <label>Select Exam Type</label>
         <Dropdown v-model="selectedExamType" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Choose Exam Type" class="w-full" />
       </div>
     </div>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div class="ems-card">
       <DataTable v-if="results.length" :value="results" :loading="loading" stripedRows responsiveLayout="scroll">
         <Column field="enrollment_id" header="Enrollment" sortable></Column>
         <Column header="Exam Type">
@@ -118,16 +118,14 @@ const generateResults = async () => {
 
     <!-- Generate Dialog -->
     <Dialog v-model:visible="generateDialogVisible" modal header="Generate Results" :style="{ width: '28rem' }">
-      <div v-if="generateError" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-        {{ generateError }}
-      </div>
+      <div v-if="generateError" class="ems-error">{{ generateError }}</div>
       <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Exam Type *</label>
+        <div class="ems-field">
+          <label>Exam Type *</label>
           <Dropdown v-model="generateForm.exam_type_id" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Select" />
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="font-medium text-surface-700 dark:text-surface-300">Grading System</label>
+        <div class="ems-field">
+          <label>Grading System</label>
           <Dropdown v-model="generateForm.grading_system_id" :options="gradingSystems" optionLabel="name" optionValue="id" placeholder="Default" showClear />
         </div>
         <p class="text-xs text-surface-500">Leave enrollment IDs empty to generate for all students.</p>

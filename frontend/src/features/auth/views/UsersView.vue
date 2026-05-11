@@ -64,7 +64,7 @@ const remove = async (id: number) => {
       </template>
     </PageHeader>
 
-    <div class="card bg-surface-0 dark:bg-surface-900 p-4 rounded-xl shadow-sm border border-surface-200 dark:border-surface-800">
+    <div class="ems-card">
       <div class="mb-4">
         <span class="p-input-icon-left w-full md:w-auto">
           <i class="pi pi-search" />

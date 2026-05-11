@@ -13,7 +13,7 @@ const uiStore = useUIStore();
     <Transition name="fade">
       <div
         v-if="uiStore.sidebarMobileOpen"
-        class="fixed inset-0 bg-black/40 z-40 lg:hidden"
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
         @click="uiStore.closeMobileSidebar"
       />
     </Transition>

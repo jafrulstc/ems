@@ -81,9 +81,7 @@ const save = async () => {
 
 <template>
   <div>
-    <div v-if="errorMsg" class="p-3 bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
-      {{ errorMsg }}
-    </div>
+    <div v-if="errorMsg" class="ems-error">{{ errorMsg }}</div>
 
     <DataTable v-if="rows.length" :value="rows" stripedRows responsiveLayout="scroll">
       <Column header="Enrollment ID" field="enrollment_id" style="width: 25%" />
