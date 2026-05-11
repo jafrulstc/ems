@@ -16,8 +16,10 @@ import type { Section, AcademicClass } from '../types/academic.types';
 import type { AcademicYear } from '@/features/core/types/academic-year.types';
 import EnrollmentFormDialog from '../components/EnrollmentFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('academic.enrollments.edit');
 const canCreate = hasPermission('academic.enrollments.create');
 const canDelete = hasPermission('academic.enrollments.delete');
@@ -32,7 +34,7 @@ const dialogVisible = ref(false);
 const editingItem = ref<Enrollment | null>(null);
 
 const studentMap = computed(() => new Map(students.value.map(s => [s.id, s.full_name])));
-const sectionMap = computed(() => new Map(sections.value.map(s => [s.id, s.name])));
+const sectionMap = computed(() => new Map(sections.value.map(s => [s.id, displayName(s.name, s.name_bn)])));
 const yearMap = computed(() => new Map(academicYears.value.map(y => [y.id, y.name])));
 
 const fetchEnrollments = async () => {

@@ -10,8 +10,10 @@ import { academicApi } from '../api/academic.api';
 import type { AcademicClass } from '../types/academic.types';
 import ClassFormDialog from '../components/ClassFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('academic.classes.edit');
 const canCreate = hasPermission('academic.classes.create');
 
@@ -51,7 +53,9 @@ const edit = (data: AcademicClass) => { editingClass.value = data; dialogVisible
         <Column field="numeric_level" header="Level" sortable style="width: 15%">
           <template #body="{ data }">{{ data.numeric_level ?? '—' }}</template>
         </Column>
-        <Column field="name" header="Name" sortable />
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">{{ displayName(data.name, data.name_bn) }}</template>
+        </Column>
         <Column header="Status" style="width: 15%">
           <template #body="{ data }">
             <Tag :severity="data.is_active ? 'success' : 'danger'" :value="data.is_active ? 'Active' : 'Inactive'" />

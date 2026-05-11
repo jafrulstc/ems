@@ -10,8 +10,10 @@ import { academicApi } from '../api/academic.api';
 import type { Subject } from '../types/academic.types';
 import SubjectFormDialog from '../components/SubjectFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('academic.subjects.edit');
 const canCreate = hasPermission('academic.subjects.create');
 
@@ -46,7 +48,9 @@ const edit = (data: Subject) => { editingSubject.value = data; dialogVisible.val
         <Column field="code" header="Code" sortable style="width: 15%">
           <template #body="{ data }">{{ data.code ?? '—' }}</template>
         </Column>
-        <Column field="name" header="Subject Name" sortable />
+        <Column field="name" header="Subject Name" sortable>
+          <template #body="{ data }">{{ displayName(data.name, data.name_bn) }}</template>
+        </Column>
         <Column header="Type" style="width: 15%">
           <template #body="{ data }">
             <Tag :severity="data.is_optional ? 'info' : 'danger'" :value="data.is_optional ? 'Optional' : 'Mandatory'" />

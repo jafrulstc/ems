@@ -13,8 +13,10 @@ import type { Routine, ExamType } from '../types/exam.types';
 import type { AcademicClass, Subject } from '@/features/academic/types/academic.types';
 import RoutineFormDialog from '../components/RoutineFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('exam.routines.edit');
 const canCreate = hasPermission('exam.routines.create');
 
@@ -27,9 +29,11 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const editingItem = ref<Routine | null>(null);
 
-const examTypeMap = computed(() => new Map(examTypes.value.map(e => [e.id, e.name])));
-const classMap = computed(() => new Map(classes.value.map(c => [c.id, c.name])));
-const subjectMap = computed(() => new Map(subjects.value.map(s => [s.id, s.name])));
+const examTypeMap = computed(() => new Map(examTypes.value.map(e => [e.id, displayName(e.name, e.name_bn)])));
+const classMap = computed(() => new Map(classes.value.map(c => [c.id, displayName(c.name, c.name_bn)])));
+const subjectMap = computed(() => new Map(subjects.value.map(s => [s.id, displayName(s.name, s.name_bn)])));
+
+const examTypeOptions = computed(() => examTypes.value.map(e => ({ ...e, displayName: displayName(e.name, e.name_bn) })));
 
 const fetchDropdowns = async () => {
   try {
@@ -78,7 +82,7 @@ const remove = async (id: number) => {
 
     <div class="ems-card">
       <div class="mb-4">
-        <Dropdown v-model="selectedExamType" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Filter by Exam Type" showClear @change="fetchRoutines" class="w-full md:w-64" />
+        <Dropdown v-model="selectedExamType" :options="examTypeOptions" optionLabel="displayName" optionValue="id" placeholder="Filter by Exam Type" showClear @change="fetchRoutines" class="w-full md:w-64" />
       </div>
 
       <DataTable v-if="routines.length" :value="routines" :loading="loading" stripedRows responsiveLayout="scroll">

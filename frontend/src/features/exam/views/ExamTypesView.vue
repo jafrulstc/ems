@@ -11,8 +11,10 @@ import type { ExamType, GradingSystem } from '../types/exam.types';
 import ExamTypeFormDialog from '../components/ExamTypeFormDialog.vue';
 import GradingSystemView from '../components/GradingSystemView.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('exam.exam_types.edit');
 const canCreate = hasPermission('exam.exam_types.create');
 
@@ -97,7 +99,9 @@ const remove = async (id: number) => {
     <!-- Exam Types Tab -->
     <div v-if="activeTab === 'types'" class="ems-card">
       <DataTable v-if="examTypes.length" :value="examTypes" :loading="loading" stripedRows responsiveLayout="scroll">
-        <Column field="name" header="Name" sortable></Column>
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">{{ displayName(data.name, data.name_bn) }}</template>
+        </Column>
         <Column field="description" header="Description" sortable>
           <template #body="{ data }">
             {{ data.description || '—' }}

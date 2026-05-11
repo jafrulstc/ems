@@ -10,8 +10,10 @@ import { academicApi } from '../api/academic.api';
 import type { ClassSubject, AcademicClass, Subject } from '../types/academic.types';
 import ClassSubjectFormDialog from '../components/ClassSubjectFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('academic.class_subjects.edit');
 const canCreate = hasPermission('academic.class_subjects.create');
 const canDelete = hasPermission('academic.class_subjects.delete');
@@ -26,15 +28,17 @@ const editingItem = ref<ClassSubject | null>(null);
 
 const classMap = computed(() => {
   const map = new Map<number, string>();
-  for (const c of classes.value) map.set(c.id, c.name);
+  for (const c of classes.value) map.set(c.id, displayName(c.name, c.name_bn));
   return map;
 });
 
 const subjectMap = computed(() => {
   const map = new Map<number, string>();
-  for (const s of subjects.value) map.set(s.id, s.name);
+  for (const s of subjects.value) map.set(s.id, displayName(s.name, s.name_bn));
   return map;
 });
+
+const classOptions = computed(() => classes.value.map(c => ({ ...c, displayName: displayName(c.name, c.name_bn) })));
 
 const fetchClasses = async () => {
   try {
@@ -83,7 +87,7 @@ const remove = async (id: number) => {
 
     <div class="ems-card">
       <div class="mb-4">
-        <Dropdown v-model="selectedClass" :options="classes" optionLabel="name" optionValue="id"
+        <Dropdown v-model="selectedClass" :options="classOptions" optionLabel="displayName" optionValue="id"
           placeholder="Filter by Class" showClear @change="onClassFilterChange" class="w-full md:w-14rem" />
       </div>
       <DataTable v-if="filtered.length" :value="filtered" :loading="loading" stripedRows responsiveLayout="scroll">

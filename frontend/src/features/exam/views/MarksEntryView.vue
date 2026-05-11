@@ -9,8 +9,10 @@ import type { ExamType, Mark } from '../types/exam.types';
 import type { AcademicClass, Subject } from '@/features/academic/types/academic.types';
 import MarksEntryForm from '../components/MarksEntryForm.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canCreate = hasPermission('exam.marks.create');
 
 const examTypes = ref<ExamType[]>([]);
@@ -27,6 +29,10 @@ const classSubjects = computed(() => {
   // For simplicity, show all subjects; backend filters by class_subject
   return subjects.value;
 });
+
+const examTypeOptions = computed(() => examTypes.value.map(e => ({ ...e, displayName: displayName(e.name, e.name_bn) })));
+const classOptions = computed(() => classes.value.map(c => ({ ...c, displayName: displayName(c.name, c.name_bn) })));
+const subjectOptions = computed(() => classSubjects.value.map(s => ({ ...s, displayName: displayName(s.name, s.name_bn) })));
 
 const fetchDropdowns = async () => {
   try {
@@ -72,15 +78,15 @@ onMounted(() => fetchDropdowns());
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="ems-field">
           <label>Exam Type *</label>
-          <Dropdown v-model="selectedExamType" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Select Exam Type" />
+          <Dropdown v-model="selectedExamType" :options="examTypeOptions" optionLabel="displayName" optionValue="id" placeholder="Select Exam Type" />
         </div>
         <div class="ems-field">
           <label>Class</label>
-          <Dropdown v-model="selectedClass" :options="classes" optionLabel="name" optionValue="id" placeholder="Select Class" showClear />
+          <Dropdown v-model="selectedClass" :options="classOptions" optionLabel="displayName" optionValue="id" placeholder="Select Class" showClear />
         </div>
         <div class="ems-field">
           <label>Subject *</label>
-          <Dropdown v-model="selectedSubject" :options="classSubjects" optionLabel="name" optionValue="id" placeholder="Select Subject" />
+          <Dropdown v-model="selectedSubject" :options="subjectOptions" optionLabel="displayName" optionValue="id" placeholder="Select Subject" />
         </div>
       </div>
     </div>

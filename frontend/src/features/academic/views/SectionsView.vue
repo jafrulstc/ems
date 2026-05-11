@@ -10,8 +10,10 @@ import { academicApi } from '../api/academic.api';
 import type { Section, AcademicClass } from '../types/academic.types';
 import SectionFormDialog from '../components/SectionFormDialog.vue';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canEdit = hasPermission('academic.sections.edit');
 const canCreate = hasPermission('academic.sections.create');
 
@@ -24,9 +26,11 @@ const editingSection = ref<Section | null>(null);
 
 const classMap = computed(() => {
   const map = new Map<number, string>();
-  for (const c of classes.value) { map.set(c.id, c.name); }
+  for (const c of classes.value) { map.set(c.id, displayName(c.name, c.name_bn)); }
   return map;
 });
+
+const classOptions = computed(() => classes.value.map(c => ({ ...c, displayName: displayName(c.name, c.name_bn) })));
 
 const fetchClasses = async () => {
   try {
@@ -59,7 +63,7 @@ const edit = (data: Section) => { editingSection.value = data; dialogVisible.val
 
     <div class="ems-card">
       <div class="mb-4">
-        <Dropdown v-model="selectedClass" :options="classes" optionLabel="name" optionValue="id"
+        <Dropdown v-model="selectedClass" :options="classOptions" optionLabel="displayName" optionValue="id"
           placeholder="Filter by Class" showClear @change="onClassFilterChange" class="w-full md:w-14rem" />
       </div>
 
@@ -67,7 +71,9 @@ const edit = (data: Section) => { editingSection.value = data; dialogVisible.val
         <Column header="Class" sortable style="width: 30%">
           <template #body="{ data }">{{ classMap.get(data.class_id) ?? data.class_id }}</template>
         </Column>
-        <Column field="name" header="Section Name" sortable />
+        <Column field="name" header="Section Name" sortable>
+          <template #body="{ data }">{{ displayName(data.name, data.name_bn) }}</template>
+        </Column>
         <Column v-if="canEdit" :exportable="false" style="min-width:8rem">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" text rounded severity="success" class="mr-2" @click="edit(slotProps.data)" />

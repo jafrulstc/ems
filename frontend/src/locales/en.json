@@ -12,6 +12,266 @@
   },
   "dashboard": {
     "welcome": "Welcome back",
-    "overview": "System Overview"
+    "overview": "System Overview",
+    "totalStudents": "Total Students",
+    "classes": "Classes",
+    "sections": "Sections",
+    "subjects": "Subjects",
+    "quickActions": "Quick Actions",
+    "addStudent": "Add Student",
+    "manageClasses": "Manage Classes",
+    "subjectsLink": "Subjects",
+    "reports": "Reports",
+    "recentActivity": "Recent Activity",
+    "activityComingSoon": "Activity feed coming soon",
+    "activityDescription": "Recent changes and updates will appear here"
+  },
+  "academic": {
+    "classes": {
+      "title": "Classes",
+      "subtitle": "Manage academic classes and levels",
+      "add": "Add Class",
+      "name": "Name",
+      "level": "Level",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "create": "Create Class",
+      "edit": "Edit Class",
+      "className": "Class Name",
+      "nameBn": "Name (Bengali)",
+      "numericLevel": "Numeric Level",
+      "isActive": "Is Active",
+      "noData": "No classes found",
+      "noDataDesc": "Create your first class to get started"
+    },
+    "sections": {
+      "title": "Sections",
+      "subtitle": "Manage sections within classes",
+      "add": "Add Section",
+      "filterByClass": "Filter by Class",
+      "sectionName": "Section Name",
+      "noData": "No sections found",
+      "noDataDesc": "Create a section to organize students within classes"
+    },
+    "subjects": {
+      "title": "Subjects",
+      "subtitle": "Manage academic subjects",
+      "add": "Add Subject",
+      "code": "Code",
+      "subjectName": "Subject Name",
+      "type": "Type",
+      "optional": "Optional",
+      "mandatory": "Mandatory",
+      "noData": "No subjects found",
+      "noDataDesc": "Create your first subject to get started"
+    },
+    "classSubjects": {
+      "title": "Class Subjects",
+      "subtitle": "Map subjects to classes with marks configuration",
+      "add": "Add Mapping",
+      "className": "Class Name",
+      "subjectName": "Subject Name",
+      "fullMarks": "Full Marks",
+      "passMarks": "Pass Marks",
+      "noData": "No class-subject mappings found",
+      "noDataDesc": "Map subjects to classes to configure marks"
+    },
+    "students": {
+      "title": "Students",
+      "subtitle": "Manage student profiles",
+      "add": "Add Student",
+      "search": "Search by name or reg no...",
+      "regNo": "Reg. No",
+      "fullName": "Full Name",
+      "gender": "Gender",
+      "noData": "No students found",
+      "noDataDesc": "Add your first student to get started"
+    },
+    "guardians": {
+      "title": "Guardians",
+      "subtitle": "Manage student parents and guardians",
+      "add": "Add Guardian",
+      "selectStudent": "Select a student",
+      "selectStudentDesc": "Choose a student to view their guardians",
+      "name": "Name",
+      "relation": "Relation",
+      "phone": "Phone",
+      "email": "Email",
+      "primary": "Primary",
+      "yes": "Yes",
+      "no": "No",
+      "noData": "No guardians found",
+      "noDataDesc": "Add a guardian for this student"
+    },
+    "enrollments": {
+      "title": "Enrollments",
+      "subtitle": "Manage student enrollments",
+      "add": "Enroll Student",
+      "student": "Student",
+      "section": "Section",
+      "academicYear": "Academic Year",
+      "rollNo": "Roll No",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "noData": "No enrollments",
+      "noDataDesc": "Enroll students to academic years and sections"
+    }
+  },
+  "exam": {
+    "config": {
+      "title": "Exam Configuration",
+      "subtitle": "Manage exam types and grading systems",
+      "addExamType": "Add Exam Type",
+      "examTypes": "Exam Types",
+      "gradingSystems": "Grading Systems",
+      "noExamTypes": "No exam types",
+      "noExamTypesDesc": "Create your first exam type to get started"
+    },
+    "routines": {
+      "title": "Exam Routines",
+      "subtitle": "Schedule and manage exam routines",
+      "add": "Add Routine",
+      "filterByExam": "Filter by Exam Type",
+      "examType": "Exam Type",
+      "class": "Class",
+      "subject": "Subject",
+      "date": "Date",
+      "time": "Time",
+      "noData": "No routines",
+      "noDataDesc": "Create exam routines to schedule exams"
+    },
+    "marks": {
+      "title": "Marks Entry",
+      "subtitle": "Enter and manage student marks",
+      "loadMarks": "Load Marks",
+      "examType": "Exam Type",
+      "class": "Class",
+      "subject": "Subject",
+      "loadPrompt": "Click \"Load Marks\" to fetch existing marks for this exam and subject."
+    },
+    "results": {
+      "title": "Results",
+      "subtitle": "View and generate exam results",
+      "viewResults": "View Results",
+      "generate": "Generate Results",
+      "selectExam": "Select Exam Type",
+      "enrollment": "Enrollment",
+      "obtained": "Obtained",
+      "fullMarks": "Full Marks",
+      "percentage": "%",
+      "grade": "Grade",
+      "point": "Point",
+      "status": "Status",
+      "pass": "Pass",
+      "fail": "Fail",
+      "noData": "No results",
+      "noDataDesc": "Select an exam type and click View Results",
+      "gradingSystem": "Grading System",
+      "generateNote": "Leave enrollment IDs empty to generate for all students."
+    }
+  },
+  "auth": {
+    "login": {
+      "welcome": "Welcome back",
+      "signIn": "Sign In",
+      "orgSlug": "Organization Slug",
+      "email": "Email Address",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?"
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage user accounts and access",
+      "add": "Add User",
+      "search": "Search by email, name, username...",
+      "email": "Email",
+      "fullName": "Full Name",
+      "username": "Username",
+      "roles": "Roles",
+      "status": "Status",
+      "noData": "No users found",
+      "noDataDesc": "Create your first user to get started"
+    },
+    "roles": {
+      "title": "Roles",
+      "subtitle": "Manage roles and their permissions",
+      "add": "Add Role",
+      "search": "Search roles...",
+      "name": "Name",
+      "description": "Description",
+      "permissions": "Permissions",
+      "noData": "No roles found",
+      "noDataDesc": "Create your first role to get started"
+    }
+  },
+  "core": {
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage application settings",
+      "add": "Add Setting",
+      "search": "Search settings...",
+      "key": "Key",
+      "value": "Value",
+      "group": "Group",
+      "noData": "No settings found",
+      "noDataDesc": "Create your first setting to get started"
+    },
+    "academicYears": {
+      "title": "Academic Years",
+      "subtitle": "Manage academic year periods",
+      "add": "Add Year",
+      "name": "Name",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "status": "Status",
+      "noData": "No academic years",
+      "noDataDesc": "Create your first academic year to get started"
+    }
+  },
+  "reports": {
+    "academic": {
+      "title": "Academic Reports",
+      "subtitle": "Comprehensive academic analytics",
+      "description": "Detailed academic analytics including enrollment trends, class performance, subject-wise analysis, and more.",
+      "enrollmentReports": "Enrollment Reports",
+      "enrollmentDesc": "Student enrollment trends and statistics",
+      "classPerformance": "Class Performance",
+      "classDesc": "Class-wise academic performance",
+      "subjectAnalysis": "Subject Analysis",
+      "subjectDesc": "Subject-wise results and trends",
+      "comingSoon": "Coming Soon"
+    },
+    "exam": {
+      "title": "Exam Reports",
+      "subtitle": "Examination analytics and results",
+      "description": "Comprehensive examination analytics including results analysis, grade distribution, pass rates, and comparison reports.",
+      "resultsOverview": "Results Overview",
+      "resultsDesc": "Exam results summary and analysis",
+      "gradeDistribution": "Grade Distribution",
+      "gradeDesc": "GPA and grade frequency analysis",
+      "comparisonReports": "Comparison Reports",
+      "comparisonDesc": "Cross-exam and year-over-year comparison",
+      "comingSoon": "Coming Soon"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "loading": "Loading...",
+    "noData": "No data available",
+    "search": "Search...",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No",
+    "optional": "Optional",
+    "copywright": "© {year} EMS. All rights reserved."
   }
 }

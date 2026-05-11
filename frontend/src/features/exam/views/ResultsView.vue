@@ -12,8 +12,10 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import { examApi } from '../api/exam.api';
 import type { ExamType, Result, ResultGeneratePayload, GradingSystem } from '../types/exam.types';
 import { usePermission } from '@/features/auth/composables/usePermission';
+import { useDisplayName } from '@/composables/useDisplayName';
 
 const { hasPermission } = usePermission();
+const { displayName } = useDisplayName();
 const canView = hasPermission('exam.results.view');
 const canCreate = hasPermission('exam.results.create');
 
@@ -27,7 +29,9 @@ const generateLoading = ref(false);
 const generateError = ref('');
 const generateForm = ref<ResultGeneratePayload>({ exam_type_id: null, grading_system_id: null });
 
-const examTypeMap = computed(() => new Map(examTypes.value.map(e => [e.id, e.name])));
+const examTypeMap = computed(() => new Map(examTypes.value.map(e => [e.id, displayName(e.name, e.name_bn)])));
+
+const examTypeOptions = computed(() => examTypes.value.map(e => ({ ...e, displayName: displayName(e.name, e.name_bn) })));
 
 const fetchExamTypes = async () => {
   try {
@@ -86,7 +90,7 @@ const generateResults = async () => {
     <div class="ems-card mb-4">
       <div class="w-full md:w-64 ems-field">
         <label>Select Exam Type</label>
-        <Dropdown v-model="selectedExamType" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Choose Exam Type" class="w-full" />
+        <Dropdown v-model="selectedExamType" :options="examTypeOptions" optionLabel="displayName" optionValue="id" placeholder="Choose Exam Type" class="w-full" />
       </div>
     </div>
 
@@ -122,7 +126,7 @@ const generateResults = async () => {
       <div class="flex flex-col gap-4">
         <div class="ems-field">
           <label>Exam Type *</label>
-          <Dropdown v-model="generateForm.exam_type_id" :options="examTypes" optionLabel="name" optionValue="id" placeholder="Select" />
+          <Dropdown v-model="generateForm.exam_type_id" :options="examTypeOptions" optionLabel="displayName" optionValue="id" placeholder="Select" />
         </div>
         <div class="ems-field">
           <label>Grading System</label>
