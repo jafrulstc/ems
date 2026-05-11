@@ -47,6 +47,36 @@ const router = createRouter({
           component: () => import('@/features/academic/views/GuardiansView.vue'),
         },
         {
+          path: 'academic/enrollments',
+          name: 'academic.enrollments',
+          component: () => import('@/features/academic/views/EnrollmentsView.vue'),
+        },
+        {
+          path: 'exam/types',
+          name: 'exam.types',
+          component: () => import('@/features/exam/views/ExamTypesView.vue'),
+        },
+        {
+          path: 'exam/routines',
+          name: 'exam.routines',
+          component: () => import('@/features/exam/views/ExamRoutinesView.vue'),
+        },
+        {
+          path: 'exam/marks',
+          name: 'exam.marks',
+          component: () => import('@/features/exam/views/MarksEntryView.vue'),
+        },
+        {
+          path: 'exam/results',
+          name: 'exam.results',
+          component: () => import('@/features/exam/views/ResultsView.vue'),
+        },
+        {
+          path: 'core/academic-years',
+          name: 'core.academic_years',
+          component: () => import('@/features/core/views/AcademicYearsView.vue'),
+        },
+        {
           path: 'reports/academic',
           name: 'reports.academic',
           component: () => import('@/features/reports/views/AcademicReportsView.vue'),

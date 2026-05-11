@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.git/
+.gitignore
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+Dockerfile
+.dockerignore
+README.md
