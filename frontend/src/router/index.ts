@@ -77,6 +77,21 @@ const router = createRouter({
           component: () => import('@/features/core/views/AcademicYearsView.vue'),
         },
         {
+          path: 'auth/users',
+          name: 'auth.users',
+          component: () => import('@/features/auth/views/UsersView.vue'),
+        },
+        {
+          path: 'auth/roles',
+          name: 'auth.roles',
+          component: () => import('@/features/auth/views/RolesView.vue'),
+        },
+        {
+          path: 'core/settings',
+          name: 'core.settings',
+          component: () => import('@/features/core/views/SettingsView.vue'),
+        },
+        {
           path: 'reports/academic',
           name: 'reports.academic',
           component: () => import('@/features/reports/views/AcademicReportsView.vue'),

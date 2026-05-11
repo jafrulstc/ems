@@ -122,6 +122,15 @@ async def upsert_overrides(id: int, payload: list[PermissionOverrideUpsert],
     return ok(await PermissionService(db).upsert_overrides(id, org_id, payload))
 
 
+@router.put("/users/{id}/roles", response_model=APIResponse[UserRead], tags=["Users"])
+async def set_user_roles(id: int, role_ids: list[int],
+                         org_id: int = Depends(get_organization_id),
+                         db: AsyncSession = Depends(get_db),
+                         _=Depends(require_permission("auth.users.edit"))):
+    """Assign roles to a user."""
+    return ok(await UserService(db).set_roles(id, org_id, role_ids))
+
+
 # ── Roles ─────────────────────────────────────────────────────────────────────
 
 @router.get("/roles", response_model=APIResponse[list[RoleWithPermissions]], tags=["Roles"])
