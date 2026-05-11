@@ -6,8 +6,6 @@ RBAC resolution order (per plan A5):
   2. role_permissions via user's roles → any granted role suffices
   3. → DENIED
 """
-from typing import Optional
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -86,3 +84,40 @@ class PermissionRepository:
         )
         count = (await self._db.execute(role_stmt)).scalar_one()
         return count > 0
+
+    async def resolve_all(self, user_id: int, org_id: int) -> list[str]:
+        """Return all resolved permission keys for a user.
+
+        Logic:
+          1. Collect permission keys from every role the user holds.
+          2. Apply user_permission_overrides: granted adds, denied removes.
+        """
+        # Step 1: role-based permission keys
+        role_stmt = (
+            select(Permission.key)
+            .distinct()
+            .select_from(UserRole)
+            .join(RolePermission, UserRole.role_id == RolePermission.role_id)
+            .join(Permission, RolePermission.permission_id == Permission.id)
+            .where(UserRole.user_id == user_id)
+        )
+        role_rows = await self._db.execute(role_stmt)
+        granted: set[str] = set(role_rows.scalars().all())
+
+        # Step 2: overrides — always win over role permissions
+        override_stmt = (
+            select(Permission.key, UserPermissionOverride.is_granted)
+            .join(Permission, UserPermissionOverride.permission_id == Permission.id)
+            .where(
+                UserPermissionOverride.user_id == user_id,
+                UserPermissionOverride.organization_id == org_id,
+            )
+        )
+        override_rows = await self._db.execute(override_stmt)
+        for key, is_granted in override_rows.all():
+            if is_granted:
+                granted.add(key)
+            else:
+                granted.discard(key)
+
+        return sorted(granted)

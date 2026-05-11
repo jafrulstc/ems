@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import { studentApi } from '../api/student.api';
 import type { Student } from '../types/student.types';
@@ -25,7 +24,7 @@ const fetchStudents = async () => {
   loading.value = true;
   try {
     const res = await studentApi.getStudents(1, 100, searchQuery.value);
-    students.value = res.data.data.items;
+    students.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -70,7 +69,7 @@ const edit = (data: Student) => {
       <div class="mb-4">
         <span class="p-input-icon-left w-full md:w-auto">
           <i class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="Search ID or Name..." @input="onSearch" class="w-full md:w-20rem" />
+          <InputText v-model="searchQuery" placeholder="Search by name or reg no..." @input="onSearch" class="w-full md:w-20rem" />
         </span>
       </div>
 
@@ -79,25 +78,13 @@ const edit = (data: Student) => {
           <div class="text-center p-4">No students found.</div>
         </template>
         
-        <Column field="student_id" header="Student ID" sortable style="width: 15%"></Column>
+        <Column field="registration_no" header="Reg. No" sortable style="width: 15%"></Column>
         
-        <Column header="Name" sortable>
-          <template #body="{ data }">
-            {{ data.first_name }} {{ data.last_name }}
-          </template>
-        </Column>
+        <Column field="full_name" header="Full Name" sortable></Column>
 
-        <Column field="guardian_name" header="Guardian" sortable></Column>
-        
         <Column field="gender" header="Gender" style="width: 10%">
           <template #body="{ data }">
-            {{ data.gender === 'M' ? 'Male' : data.gender === 'F' ? 'Female' : 'Other' }}
-          </template>
-        </Column>
-
-        <Column header="Status" style="width: 10%">
-          <template #body="{ data }">
-            <Tag :severity="data.is_active ? 'success' : 'danger'" :value="data.is_active ? 'Active' : 'Inactive'" />
+            {{ data.gender ?? '—' }}
           </template>
         </Column>
 

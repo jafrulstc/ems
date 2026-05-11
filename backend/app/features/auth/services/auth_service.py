@@ -4,8 +4,9 @@ from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.features.auth.repositories.permission_repo import PermissionRepository
 from app.features.auth.repositories.user_repo import UserRepository
-from app.features.auth.schemas import LoginRequest, LoginResponse, UserRead
+from app.features.auth.schemas import LoginRequest, LoginResponse, UserMeResponse, UserRead
 from app.features.auth.security import (
     create_access_token, create_refresh_token, decode_token, verify_password,
 )
@@ -16,6 +17,7 @@ settings = get_settings()
 
 class AuthService:
     def __init__(self, db: AsyncSession) -> None:
+        self._db = db
         self._repo = UserRepository(db)
 
     async def login(self, payload: LoginRequest) -> tuple[LoginResponse, str]:
@@ -64,8 +66,12 @@ class AuthService:
         new_refresh = create_refresh_token(user_id, org_id)
         return new_access, new_refresh
 
-    async def get_me(self, user_id: int, org_id: int) -> UserRead:
+    async def get_me(self, user_id: int, org_id: int) -> UserMeResponse:
         user = await self._repo.get_by_id(user_id, org_id)
         if not user:
             raise unauthorized("User not found.")
-        return UserRead.model_validate(user)
+        permissions = await PermissionRepository(self._db).resolve_all(user_id, org_id)
+        return UserMeResponse(
+            **UserRead.model_validate(user).model_dump(),
+            permissions=permissions,
+        )

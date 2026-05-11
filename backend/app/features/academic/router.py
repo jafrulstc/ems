@@ -130,7 +130,6 @@ async def list_class_subjects(p: PaginationParams = Depends(pagination_params),
                                org_id: int = Depends(get_organization_id), db: AsyncSession = Depends(get_db),
                                _=Depends(require_permission("academic.class_subjects.view"))):
     from app.features.academic.repositories.class_subject_repo import ClassSubjectRepository
-    from app.features.academic.repositories.base_repo import BaseRepo
     repo = ClassSubjectRepository(db)
     items, total = await repo.get_many(org_id, p.offset, p.limit)
     return paginated([ClassSubjectRead.model_validate(i) for i in items], total, p.page, p.size)

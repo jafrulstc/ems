@@ -23,7 +23,7 @@ const fetchSubjects = async () => {
   loading.value = true;
   try {
     const res = await academicApi.getSubjects(1, 100);
-    subjects.value = res.data.data.items;
+    subjects.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -44,15 +44,6 @@ const edit = (data: Subject) => {
   editingSubject.value = data;
   dialogVisible.value = true;
 };
-
-const getSeverity = (type: string) => {
-  switch (type) {
-    case 'mandatory': return 'danger';
-    case 'optional': return 'info';
-    case 'elective': return 'warning';
-    default: return 'secondary';
-  }
-};
 </script>
 
 <template>
@@ -71,19 +62,16 @@ const getSeverity = (type: string) => {
           <div class="text-center p-4">No subjects found.</div>
         </template>
         
-        <Column field="code" header="Code" sortable style="width: 15%"></Column>
+        <Column field="code" header="Code" sortable style="width: 15%">
+          <template #body="{ data }">
+            {{ data.code ?? '—' }}
+          </template>
+        </Column>
         <Column field="name" header="Subject Name" sortable></Column>
-        <Column field="credit_hours" header="Credits" sortable style="width: 10%"></Column>
         
         <Column header="Type" style="width: 15%">
           <template #body="{ data }">
-            <Tag :severity="getSeverity(data.subject_type)" :value="data.subject_type.toUpperCase()" />
-          </template>
-        </Column>
-
-        <Column header="Status" style="width: 10%">
-          <template #body="{ data }">
-            <Tag :severity="data.is_active ? 'success' : 'danger'" :value="data.is_active ? 'Active' : 'Inactive'" />
+            <Tag :severity="data.is_optional ? 'info' : 'danger'" :value="data.is_optional ? 'Optional' : 'Mandatory'" />
           </template>
         </Column>
 

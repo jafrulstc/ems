@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.academic.enrollment_models import Enrollment
-from app.features.academic.repositories.base_repo import BaseRepo
+from app.shared.base_repo import BaseRepo
 
 
 class EnrollmentRepository(BaseRepo):

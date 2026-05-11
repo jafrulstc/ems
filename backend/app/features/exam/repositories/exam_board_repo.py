@@ -1,6 +1,6 @@
 from app.features.exam.models import ExamBoard
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class ExamBoardRepository(ExamBaseRepo):
+class ExamBoardRepository(BaseRepo):
     _model = ExamBoard

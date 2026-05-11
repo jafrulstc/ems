@@ -22,8 +22,8 @@ const editingClass = ref<AcademicClass | null>(null);
 const fetchClasses = async () => {
   loading.value = true;
   try {
-    const res = await academicApi.getClasses(1, 100); // simplify pagination for now
-    classes.value = res.data.data.items;
+    const res = await academicApi.getClasses(1, 100);
+    classes.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -62,14 +62,12 @@ const edit = (data: AcademicClass) => {
           <div class="text-center p-4">No classes found.</div>
         </template>
         
-        <Column field="level" header="Level" sortable style="width: 10%"></Column>
-        <Column field="name" header="Name" sortable></Column>
-        
-        <Column header="Groups" style="width: 15%">
+        <Column field="numeric_level" header="Level" sortable style="width: 15%">
           <template #body="{ data }">
-            <Tag :severity="data.has_groups ? 'info' : 'secondary'" :value="data.has_groups ? 'Yes' : 'No'" />
+            {{ data.numeric_level ?? '—' }}
           </template>
         </Column>
+        <Column field="name" header="Name" sortable></Column>
         
         <Column header="Status" style="width: 15%">
           <template #body="{ data }">

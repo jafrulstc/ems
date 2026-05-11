@@ -1,6 +1,6 @@
 from app.features.exam.models import ExamType
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class ExamTypeRepository(ExamBaseRepo):
+class ExamTypeRepository(BaseRepo):
     _model = ExamType

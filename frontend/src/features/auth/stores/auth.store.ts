@@ -24,12 +24,37 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('access_token');
   };
 
+  const fetchMe = async () => {
+    if (!token.value) {
+      initialized.value = true;
+      return;
+    }
+    try {
+      const res = await authApi.getMe();
+      const meData = res.data.data!;
+      user.value = {
+        id: meData.id,
+        email: meData.email,
+        username: meData.username ?? null,
+        full_name: meData.full_name ?? null,
+        is_active: meData.is_active,
+        is_superuser: meData.is_superuser,
+        organization_id: meData.organization_id,
+        roles: meData.roles ?? [],
+      };
+      permissions.value = meData.permissions ?? [];
+    } catch (e) {
+      clearAuth();
+    } finally {
+      initialized.value = true;
+    }
+  };
+
   const login = async (payload: LoginPayload) => {
     loading.value = true;
     try {
       const res = await authApi.login(payload);
-      setToken(res.data.data.access_token);
-      user.value = res.data.data.user;
+      setToken(res.data.data!.access_token);
       await fetchMe();
     } finally {
       loading.value = false;
@@ -43,22 +68,6 @@ export const useAuthStore = defineStore('auth', () => {
       // ignore
     } finally {
       clearAuth();
-    }
-  };
-
-  const fetchMe = async () => {
-    if (!token.value) {
-      initialized.value = true;
-      return;
-    }
-    try {
-      const res = await authApi.getMe();
-      user.value = res.data.data as unknown as User;
-      permissions.value = []; // TODO: implement permission resolving in backend
-    } catch (e) {
-      clearAuth();
-    } finally {
-      initialized.value = true;
     }
   };
 

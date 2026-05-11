@@ -94,6 +94,11 @@ class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserMeResponse(UserRead):
+    """Extended user info with resolved permission keys for the /auth/me endpoint."""
+    permissions: list[str] = []
+
+
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

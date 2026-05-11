@@ -4,17 +4,21 @@ import { useAuthStore } from '@/features/auth/stores/auth.store';
 import { useI18n } from 'vue-i18n';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
+import Menu from 'primevue/menu';
+import { computed, ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 
 const uiStore = useUIStore();
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const { t } = useI18n();
 
+const userMenuRef = ref();
+
 const languages = computed(() => [
-  { name: t('app.language.en'), code: 'en' },
-  { name: t('app.language.bn'), code: 'bn' }
+  { name: 'EN', code: 'en' },
+  { name: 'বাং', code: 'bn' }
 ]);
 
 const currentLang = computed({
@@ -24,50 +28,103 @@ const currentLang = computed({
   }
 });
 
-const handleLogout = async () => {
-  await authStore.logout();
-  router.push('/login');
+const userInitials = computed(() => {
+  const name = authStore.user?.full_name || authStore.user?.email || 'U';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+});
+
+const userMenuItems = computed(() => [
+  { label: authStore.user?.full_name || 'User', disabled: true, class: 'font-semibold' },
+  { separator: true },
+  { label: authStore.user?.email || '', disabled: true, class: 'text-xs text-slate-400' },
+  { separator: true },
+  { label: t('app.theme.light'), icon: 'pi pi-sun', command: () => { if (uiStore.theme === 'dark') uiStore.toggleTheme(); } },
+  { label: t('app.theme.dark'), icon: 'pi pi-moon', command: () => { if (uiStore.theme === 'light') uiStore.toggleTheme(); } },
+  { separator: true },
+  { label: 'Sign Out', icon: 'pi pi-sign-out', command: () => { authStore.logout(); router.push('/login'); } }
+]);
+
+const pageTitle = computed(() => {
+  const name = route.name as string;
+  if (!name) return '';
+  const map: Record<string, string> = {
+    home: 'Dashboard',
+    'academic.classes': 'Classes',
+    'academic.sections': 'Sections',
+    'academic.subjects': 'Subjects',
+    'academic.students': 'Students',
+    'academic.guardians': 'Guardians',
+    'reports.academic': 'Academic Reports',
+    'reports.exam': 'Exam Reports',
+  };
+  return map[name] || name;
+});
+
+const toggleUserMenu = (event: Event) => {
+  userMenuRef.value.toggle(event);
 };
 </script>
 
 <template>
-  <div class="h-[70px] bg-surface-0 dark:bg-surface-900 shadow-sm border-b border-surface-200 dark:border-surface-800 flex items-center justify-between px-6 transition-colors duration-200 z-10 sticky top-0">
+  <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
+    <!-- Left: Hamburger + Page title -->
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-lg bg-primary-500 text-white flex items-center justify-center font-bold text-xl shadow-md">
-        E
+      <Button
+        @click="uiStore.toggleMobileSidebar"
+        icon="pi pi-bars"
+        severity="secondary"
+        text
+        rounded
+        class="lg:hidden"
+        aria-label="Toggle Menu"
+      />
+      <Button
+        @click="uiStore.toggleSidebar"
+        icon="pi pi-bars"
+        severity="secondary"
+        text
+        rounded
+        class="hidden lg:inline-flex"
+        aria-label="Toggle Sidebar"
+      />
+      <div class="hidden sm:block">
+        <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 leading-tight">{{ pageTitle }}</h2>
       </div>
-      <span class="text-xl font-semibold text-surface-900 dark:text-surface-0 hidden sm:block">
-        {{ t('app.title') }}
-      </span>
     </div>
 
-    <div class="flex items-center gap-4">
-      <Select 
-        v-model="currentLang" 
-        :options="languages" 
-        optionLabel="name" 
-        class="w-32" 
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2">
+      <!-- Language selector -->
+      <Select
+        v-model="currentLang"
+        :options="languages"
+        optionLabel="name"
+        class="w-20 text-sm"
       />
-      
-      <Button 
-        @click="uiStore.toggleTheme" 
-        :icon="uiStore.theme === 'light' ? 'pi pi-moon' : 'pi pi-sun'"
-        severity="secondary" 
-        text 
-        rounded 
-        aria-label="Toggle Theme"
+
+      <!-- Notification placeholder -->
+      <Button
+        icon="pi pi-bell"
+        severity="secondary"
+        text
+        rounded
+        badge="0"
+        aria-label="Notifications"
+        class="text-slate-500"
       />
-      
-      <Button 
-        v-if="authStore.isAuthenticated"
-        @click="handleLogout"
-        icon="pi pi-sign-out"
-        severity="danger" 
-        text 
-        rounded 
-        aria-label="Logout"
-        title="Logout"
-      />
+
+      <!-- User avatar -->
+      <button
+        @click="toggleUserMenu"
+        class="ml-1 flex items-center gap-2 cursor-pointer rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+        aria-label="User menu"
+      >
+        <div class="avatar-initials bg-primary-600 text-white text-xs">
+          {{ userInitials }}
+        </div>
+      </button>
+
+      <Menu ref="userMenuRef" :model="userMenuItems" :popup="true" class="min-w-52" />
     </div>
-  </div>
+  </header>
 </template>

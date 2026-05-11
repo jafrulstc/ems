@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import Tag from 'primevue/tag';
 import Dropdown from 'primevue/dropdown';
 import { academicApi } from '../api/academic.api';
 import type { Section, AcademicClass } from '../types/academic.types';
@@ -23,10 +22,18 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const editingSection = ref<Section | null>(null);
 
+const classMap = computed(() => {
+  const map = new Map<number, string>();
+  for (const c of classes.value) {
+    map.set(c.id, c.name);
+  }
+  return map;
+});
+
 const fetchClasses = async () => {
   try {
     const res = await academicApi.getClasses(1, 100);
-    classes.value = res.data.data.items;
+    classes.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error(e);
   }
@@ -36,7 +43,7 @@ const fetchSections = async () => {
   loading.value = true;
   try {
     const res = await academicApi.getSections(1, 100, selectedClass.value || undefined);
-    sections.value = res.data.data.items;
+    sections.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -94,15 +101,12 @@ const edit = (data: Section) => {
           <div class="text-center p-4">No sections found.</div>
         </template>
         
-        <Column field="class_name" header="Class" sortable style="width: 20%"></Column>
-        <Column field="name" header="Section Name" sortable></Column>
-        <Column field="capacity" header="Capacity" sortable style="width: 15%"></Column>
-        
-        <Column header="Status" style="width: 15%">
+        <Column header="Class" sortable style="width: 30%">
           <template #body="{ data }">
-            <Tag :severity="data.is_active ? 'success' : 'danger'" :value="data.is_active ? 'Active' : 'Inactive'" />
+            {{ classMap.get(data.class_id) ?? data.class_id }}
           </template>
         </Column>
+        <Column field="name" header="Section Name" sortable></Column>
 
         <Column v-if="canEdit" :exportable="false" style="min-width:8rem">
           <template #body="slotProps">

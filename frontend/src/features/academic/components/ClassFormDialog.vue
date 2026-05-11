@@ -23,8 +23,7 @@ const errorMsg = ref('');
 
 const form = ref({
   name: '',
-  level: 1,
-  has_groups: false,
+  numeric_level: null as number | null,
   is_active: true
 });
 
@@ -33,12 +32,11 @@ watch(() => props.visible, (val) => {
     if (props.editData) {
       form.value = {
         name: props.editData.name,
-        level: props.editData.level,
-        has_groups: props.editData.has_groups,
+        numeric_level: props.editData.numeric_level ?? null,
         is_active: props.editData.is_active
       };
     } else {
-      form.value = { name: '', level: 1, has_groups: false, is_active: true };
+      form.value = { name: '', numeric_level: null, is_active: true };
     }
     errorMsg.value = '';
   }
@@ -86,13 +84,8 @@ const save = async () => {
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="level" class="font-medium">Academic Level (Order)</label>
-        <InputNumber id="level" v-model="form.level" :min="1" />
-      </div>
-
-      <div class="flex items-center gap-2 mt-2">
-        <Checkbox inputId="has_groups" v-model="form.has_groups" :binary="true" />
-        <label for="has_groups">Has Groups (e.g. Science/Arts)</label>
+        <label for="numeric_level" class="font-medium">Numeric Level</label>
+        <InputNumber id="numeric_level" v-model="form.numeric_level" :min="1" placeholder="Optional" />
       </div>
 
       <div class="flex items-center gap-2 mt-2">

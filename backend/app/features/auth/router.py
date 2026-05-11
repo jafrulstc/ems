@@ -10,7 +10,7 @@ from app.dependencies import get_current_user, get_organization_id, require_perm
 from app.features.auth.schemas import (
     LoginRequest, LoginResponse, PermissionOverrideRead, PermissionOverrideUpsert,
     PermissionRead, RoleCreate, RoleUpdate, RoleWithPermissions,
-    UserCreate, UserRead, UserUpdate,
+    UserCreate, UserMeResponse, UserRead, UserUpdate,
 )
 from app.features.auth.services.auth_service import AuthService
 from app.features.auth.services.permission_service import PermissionService
@@ -60,7 +60,7 @@ async def logout(response: Response):
     return ok(None, "Logged out successfully.")
 
 
-@router.get("/me", response_model=APIResponse[UserRead], tags=["Auth"])
+@router.get("/me", response_model=APIResponse[UserMeResponse], tags=["Auth"])
 async def me(request: Request, db: AsyncSession = Depends(get_db),
              cu=Depends(get_current_user)):
     return ok(await AuthService(db).get_me(cu.user_id, cu.organization_id))

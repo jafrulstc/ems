@@ -2,8 +2,6 @@
 import { ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
 import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import type { Subject, SubjectCreatePayload, SubjectUpdatePayload } from '../types/academic.types';
@@ -22,18 +20,10 @@ const emit = defineEmits<{
 const loading = ref(false);
 const errorMsg = ref('');
 
-const subjectTypes = [
-  { label: 'Mandatory', value: 'mandatory' },
-  { label: 'Optional', value: 'optional' },
-  { label: 'Elective', value: 'elective' }
-];
-
 const form = ref({
   name: '',
-  code: '',
-  credit_hours: 1,
-  subject_type: 'mandatory',
-  is_active: true
+  code: '' as string | null,
+  is_optional: false,
 });
 
 watch(() => props.visible, (val) => {
@@ -41,13 +31,11 @@ watch(() => props.visible, (val) => {
     if (props.editData) {
       form.value = {
         name: props.editData.name,
-        code: props.editData.code,
-        credit_hours: props.editData.credit_hours,
-        subject_type: props.editData.subject_type,
-        is_active: props.editData.is_active
+        code: props.editData.code ?? '',
+        is_optional: props.editData.is_optional,
       };
     } else {
-      form.value = { name: '', code: '', credit_hours: 1, subject_type: 'mandatory', is_active: true };
+      form.value = { name: '', code: '', is_optional: false };
     }
     errorMsg.value = '';
   }
@@ -61,10 +49,15 @@ const save = async () => {
   loading.value = true;
   errorMsg.value = '';
   try {
+    const payload = {
+      ...form.value,
+      code: form.value.code || null,
+    };
+
     if (props.editData) {
-      await academicApi.updateSubject(props.editData.id, form.value as SubjectUpdatePayload);
+      await academicApi.updateSubject(props.editData.id, payload as SubjectUpdatePayload);
     } else {
-      await academicApi.createSubject(form.value as SubjectCreatePayload);
+      await academicApi.createSubject(payload as SubjectCreatePayload);
     }
     emit('saved');
     close();
@@ -95,29 +88,13 @@ const save = async () => {
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="code" class="font-medium">Subject Code</label>
-        <InputText id="code" v-model="form.code" required />
-      </div>
-      
-      <div class="flex flex-col gap-2">
-        <label for="subject_type" class="font-medium">Type</label>
-        <Dropdown 
-          id="subject_type" 
-          v-model="form.subject_type" 
-          :options="subjectTypes" 
-          optionLabel="label" 
-          optionValue="value" 
-        />
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="credit_hours" class="font-medium">Credit Hours</label>
-        <InputNumber id="credit_hours" v-model="form.credit_hours" :min="0" :max="10" />
+        <label for="code" class="font-medium">Subject Code (Optional)</label>
+        <InputText id="code" v-model="form.code" />
       </div>
 
       <div class="flex items-center gap-2 mt-2">
-        <Checkbox inputId="is_active" v-model="form.is_active" :binary="true" />
-        <label for="is_active">Is Active</label>
+        <Checkbox inputId="is_optional" v-model="form.is_optional" :binary="true" />
+        <label for="is_optional">Optional Subject</label>
       </div>
     </div>
 

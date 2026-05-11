@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.exam.models import Mark
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class MarkRepository(ExamBaseRepo):
+class MarkRepository(BaseRepo):
     _model = Mark
 
     async def get_by_unique_key(

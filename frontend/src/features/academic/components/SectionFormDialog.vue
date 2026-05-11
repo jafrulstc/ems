@@ -2,8 +2,6 @@
 import { ref, watch, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import InputNumber from 'primevue/inputnumber';
-import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
 import type { Section, SectionCreatePayload, SectionUpdatePayload, AcademicClass } from '../types/academic.types';
@@ -26,14 +24,12 @@ const classes = ref<AcademicClass[]>([]);
 const form = ref({
   name: '',
   class_id: null as number | null,
-  capacity: 50,
-  is_active: true
 });
 
 onMounted(async () => {
   try {
     const res = await academicApi.getClasses(1, 100);
-    classes.value = res.data.data.items;
+    classes.value = res.data.data?.items ?? [];
   } catch (e) {
     console.error('Failed to load classes', e);
   }
@@ -45,11 +41,9 @@ watch(() => props.visible, (val) => {
       form.value = {
         name: props.editData.name,
         class_id: props.editData.class_id,
-        capacity: props.editData.capacity,
-        is_active: props.editData.is_active
       };
     } else {
-      form.value = { name: '', class_id: null, capacity: 50, is_active: true };
+      form.value = { name: '', class_id: null };
     }
     errorMsg.value = '';
   }
@@ -69,7 +63,7 @@ const save = async () => {
   errorMsg.value = '';
   try {
     if (props.editData) {
-      await academicApi.updateSection(props.editData.id, form.value as SectionUpdatePayload);
+      await academicApi.updateSection(props.editData.id, { name: form.value.name } as SectionUpdatePayload);
     } else {
       await academicApi.createSection(form.value as SectionCreatePayload);
     }
@@ -105,6 +99,7 @@ const save = async () => {
           optionLabel="name" 
           optionValue="id" 
           placeholder="Select a Class" 
+          :disabled="!!editData"
           required 
         />
       </div>
@@ -112,16 +107,6 @@ const save = async () => {
       <div class="flex flex-col gap-2">
         <label for="name" class="font-medium">Section Name (e.g. A, Rose)</label>
         <InputText id="name" v-model="form.name" required />
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="capacity" class="font-medium">Capacity</label>
-        <InputNumber id="capacity" v-model="form.capacity" :min="1" />
-      </div>
-
-      <div class="flex items-center gap-2 mt-2">
-        <Checkbox inputId="is_active" v-model="form.is_active" :binary="true" />
-        <label for="is_active">Is Active</label>
       </div>
     </div>
 

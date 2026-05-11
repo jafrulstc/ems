@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.exam.models import GradingRule, GradingSystem
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class GradingSystemRepository(ExamBaseRepo):
+class GradingSystemRepository(BaseRepo):
     _model = GradingSystem
 
     async def get_default(self, org_id: int) -> Optional[GradingSystem]:

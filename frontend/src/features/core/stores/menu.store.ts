@@ -11,7 +11,7 @@ export const useMenuStore = defineStore('menu', () => {
     loading.value = true;
     try {
       const res = await menuApi.getTree();
-      tree.value = res.data.data;
+      tree.value = res.data.data ?? [];
     } catch (e) {
       tree.value = [];
     } finally {

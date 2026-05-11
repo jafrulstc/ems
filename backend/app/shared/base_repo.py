@@ -1,10 +1,13 @@
-"""Shared base repo for exam models — mirrors academic.repositories.base_repo."""
+"""Shared base repository mixin for soft-deletable, tenant-scoped models."""
 from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class ExamBaseRepo:
+class BaseRepo:
+    """Generic async CRUD helpers — subclass and set `_model`."""
+
     _model = None
 
     def __init__(self, db: AsyncSession) -> None:
@@ -18,7 +21,9 @@ class ExamBaseRepo:
         total = (await self._db.execute(
             select(func.count()).select_from(base.subquery())
         )).scalar_one()
-        rows = await self._db.execute(base.order_by(self._model.id).offset(offset).limit(limit))
+        rows = await self._db.execute(
+            base.order_by(self._model.id).offset(offset).limit(limit)
+        )
         return list(rows.scalars().all()), total
 
     async def get_by_id(self, id: int, org_id: int):

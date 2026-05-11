@@ -3,10 +3,10 @@ from datetime import date
 from typing import Optional
 from sqlalchemy import select
 from app.features.exam.models import AttendanceRecord, Result
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class AttendanceRepository(ExamBaseRepo):
+class AttendanceRepository(BaseRepo):
     _model = AttendanceRecord
 
     async def get_by_enroll_date(
@@ -45,7 +45,7 @@ class AttendanceRepository(ExamBaseRepo):
         return list(r.scalars().all())
 
 
-class ResultRepository(ExamBaseRepo):
+class ResultRepository(BaseRepo):
     _model = Result
 
     async def get_by_enroll_exam(

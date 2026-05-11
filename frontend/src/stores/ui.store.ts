@@ -22,6 +22,22 @@ export const useUIStore = defineStore('ui', () => {
     }
   }, { immediate: true });
 
+  // --- Sidebar ---
+  const sidebarCollapsed = ref(false);
+  const sidebarMobileOpen = ref(false);
+
+  const toggleSidebar = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+  };
+
+  const toggleMobileSidebar = () => {
+    sidebarMobileOpen.value = !sidebarMobileOpen.value;
+  };
+
+  const closeMobileSidebar = () => {
+    sidebarMobileOpen.value = false;
+  };
+
   // --- Language ---
   const currentLocale = ref<'en' | 'bn'>(locale.value as 'en' | 'bn');
 
@@ -34,6 +50,11 @@ export const useUIStore = defineStore('ui', () => {
   return {
     theme,
     toggleTheme,
+    sidebarCollapsed,
+    sidebarMobileOpen,
+    toggleSidebar,
+    toggleMobileSidebar,
+    closeMobileSidebar,
     currentLocale,
     setLanguage,
   };

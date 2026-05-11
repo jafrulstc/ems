@@ -2,10 +2,10 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.exam.models import ExamRegistration
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class ExamRegistrationRepository(ExamBaseRepo):
+class ExamRegistrationRepository(BaseRepo):
     _model = ExamRegistration
 
     async def get_by_enroll_exam(

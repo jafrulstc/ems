@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { Router } from 'vue-router';
 
 // Default config
 const apiClient = axios.create({
@@ -8,6 +9,13 @@ const apiClient = axios.create({
   },
   withCredentials: true, // For HTTP-only refresh cookies
 });
+
+// Lazy router reference to avoid circular deps
+let router: Router | null = null;
+
+export function setApiClientRouter(r: Router) {
+  router = r;
+}
 
 // Request Interceptor: Attach access token
 apiClient.interceptors.request.use(
@@ -25,18 +33,33 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 globally
+// Response Interceptor: Handle 401 with token refresh
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Clear token and redirect if unauthorized
-      localStorage.removeItem('access_token');
-      // Use window.location instead of router to avoid circular deps in simple cases
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const res = await apiClient.post('/auth/refresh');
+        const newToken = res.data?.data?.access_token;
+        if (newToken) {
+          localStorage.setItem('access_token', newToken);
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed — clear auth and redirect
+        localStorage.removeItem('access_token');
+        if (router && !router.currentRoute.value.path.includes('/login')) {
+          router.push({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } });
+        }
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

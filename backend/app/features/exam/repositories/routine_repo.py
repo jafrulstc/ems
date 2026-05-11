@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from app.features.exam.models import ExamRoutine
-from app.features.exam.repositories.base_repo import ExamBaseRepo
+from app.shared.base_repo import BaseRepo
 
 
-class RoutineRepository(ExamBaseRepo):
+class RoutineRepository(BaseRepo):
     _model = ExamRoutine
 
     async def get_by_exam_type(self, exam_type_id: int, org_id: int) -> list[ExamRoutine]:

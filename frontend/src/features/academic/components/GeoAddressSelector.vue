@@ -30,7 +30,7 @@ onMounted(async () => {
   loading.value = true;
   try {
     const res = await coreApi.getDivisions();
-    divisions.value = res.data.data;
+    divisions.value = res.data.data ?? [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -47,7 +47,7 @@ const onDivisionChange = async () => {
   
   if (selectedDivision.value) {
     const res = await coreApi.getDistricts(selectedDivision.value);
-    districts.value = res.data.data;
+    districts.value = res.data.data ?? [];
   } else {
     districts.value = [];
   }
@@ -61,7 +61,7 @@ const onDistrictChange = async () => {
   
   if (selectedDistrict.value) {
     const res = await coreApi.getUpazilas(selectedDistrict.value);
-    upazilas.value = res.data.data;
+    upazilas.value = res.data.data ?? [];
   } else {
     upazilas.value = [];
   }
@@ -74,7 +74,7 @@ const onUpazilaChange = async () => {
   
   if (selectedUpazila.value) {
     const res = await coreApi.getPostOffices(selectedUpazila.value);
-    postOffices.value = res.data.data;
+    postOffices.value = res.data.data ?? [];
   } else {
     postOffices.value = [];
   }
@@ -86,7 +86,7 @@ const onPostOfficeChange = async () => {
   
   if (selectedPostOffice.value) {
     const res = await coreApi.getVillages(selectedPostOffice.value);
-    villages.value = res.data.data;
+    villages.value = res.data.data ?? [];
   } else {
     villages.value = [];
   }
@@ -99,70 +99,70 @@ const onVillageChange = () => {
 
 <template>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-surface-500">Division</label>
-      <Dropdown 
-        v-model="selectedDivision" 
-        :options="divisions" 
-        optionLabel="name" 
-        optionValue="id" 
-        placeholder="Select Division" 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Division</label>
+      <Dropdown
+        v-model="selectedDivision"
+        :options="divisions"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select Division"
         @change="onDivisionChange"
         :loading="loading"
         class="w-full text-sm"
       />
     </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-surface-500">District</label>
-      <Dropdown 
-        v-model="selectedDistrict" 
-        :options="districts" 
-        optionLabel="name" 
-        optionValue="id" 
-        placeholder="Select District" 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">District</label>
+      <Dropdown
+        v-model="selectedDistrict"
+        :options="districts"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select District"
         @change="onDistrictChange"
         :disabled="!selectedDivision"
         class="w-full text-sm"
       />
     </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-surface-500">Upazila</label>
-      <Dropdown 
-        v-model="selectedUpazila" 
-        :options="upazilas" 
-        optionLabel="name" 
-        optionValue="id" 
-        placeholder="Select Upazila" 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Upazila</label>
+      <Dropdown
+        v-model="selectedUpazila"
+        :options="upazilas"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select Upazila"
         @change="onUpazilaChange"
         :disabled="!selectedDistrict"
         class="w-full text-sm"
       />
     </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-surface-500">Post Office</label>
-      <Dropdown 
-        v-model="selectedPostOffice" 
-        :options="postOffices" 
-        optionLabel="name" 
-        optionValue="id" 
-        placeholder="Select Post Office" 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Post Office</label>
+      <Dropdown
+        v-model="selectedPostOffice"
+        :options="postOffices"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select Post Office"
         @change="onPostOfficeChange"
         :disabled="!selectedUpazila"
         class="w-full text-sm"
       />
     </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-surface-500">Village</label>
-      <Dropdown 
-        v-model="selectedVillage" 
-        :options="villages" 
-        optionLabel="name" 
-        optionValue="id" 
-        placeholder="Select Village" 
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Village</label>
+      <Dropdown
+        v-model="selectedVillage"
+        :options="villages"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Select Village"
         @change="onVillageChange"
         :disabled="!selectedPostOffice"
         class="w-full text-sm"

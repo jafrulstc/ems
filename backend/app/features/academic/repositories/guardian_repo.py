@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.academic.guardian_models import Guardian
-from app.features.academic.repositories.base_repo import BaseRepo
+from app.shared.base_repo import BaseRepo
 
 
 class GuardianRepository(BaseRepo):

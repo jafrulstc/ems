@@ -37,14 +37,14 @@ const router = createRouter({
           component: () => import('@/features/academic/views/SubjectsView.vue'),
         },
         {
-          path: 'academic/guardians',
-          name: 'academic.guardians',
-          component: () => import('@/features/academic/views/GuardiansView.vue'),
-        },
-        {
           path: 'academic/students',
           name: 'academic.students',
           component: () => import('@/features/academic/views/StudentsView.vue'),
+        },
+        {
+          path: 'academic/guardians',
+          name: 'academic.guardians',
+          component: () => import('@/features/academic/views/GuardiansView.vue'),
         },
         {
           path: 'reports/academic',
