@@ -3,13 +3,11 @@ import { computed, onMounted } from 'vue';
 import { useMenuStore } from '@/features/core/stores/menu.store';
 import { usePermission } from '@/features/auth/composables/usePermission';
 import { useUIStore } from '@/stores/ui.store';
-import { useRouter, useRoute } from 'vue-router';
+import SidebarItem from './SidebarItem.vue';
 
 const menuStore = useMenuStore();
 const { hasPermission, isSuperuser } = usePermission();
 const uiStore = useUIStore();
-const router = useRouter();
-const route = useRoute();
 
 onMounted(() => {
   if (menuStore.tree.length === 0) {
@@ -24,24 +22,13 @@ const filterMenu = (items: any[]): any[] => {
       if (isSuperuser.value || !item.permission_key) return true;
       return hasPermission(item.permission_key).value;
     })
-    .map(item => {
-      const children = item.children ? filterMenu(item.children) : [];
-      return { ...item, children };
-    });
+    .map(item => ({
+      ...item,
+      children: item.children ? filterMenu(item.children) : []
+    }));
 };
 
 const visibleMenu = computed(() => filterMenu(menuStore.tree));
-
-const isActive = (routeName: string | null) => {
-  if (!routeName) return false;
-  return route.name === routeName;
-};
-
-const navigate = (routeName: string) => {
-  router.push({ name: routeName }).catch(() => {});
-  uiStore.closeMobileSidebar();
-};
-
 const collapsed = computed(() => uiStore.sidebarCollapsed);
 </script>
 
@@ -65,43 +52,11 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
     <!-- Mobile nav items -->
     <nav class="flex-1 overflow-y-auto py-3 px-3">
       <ul class="space-y-1">
-        <template v-for="item in visibleMenu" :key="item.id">
-          <li v-if="item.children?.length">
-            <div class="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              {{ item.label }}
-            </div>
-            <ul class="space-y-0.5">
-              <li v-for="child in item.children" :key="child.id">
-                <button
-                  @click="child.route_name && navigate(child.route_name)"
-                  :class="[
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
-                    isActive(child.route_name)
-                      ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
-                  ]"
-                >
-                  <i v-if="child.icon" :class="child.icon" class="text-base w-5 text-center" />
-                  <span>{{ child.label }}</span>
-                </button>
-              </li>
-            </ul>
-          </li>
-          <li v-else>
-            <button
-              @click="item.route_name && navigate(item.route_name)"
-              :class="[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
-                isActive(item.route_name)
-                  ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
-              ]"
-            >
-              <i v-if="item.icon" :class="item.icon" class="text-base w-5 text-center" />
-              <span>{{ item.label }}</span>
-            </button>
-          </li>
-        </template>
+        <SidebarItem 
+          v-for="item in visibleMenu" 
+          :key="item.id" 
+          :item="item" 
+        />
       </ul>
     </nav>
   </aside>
@@ -125,46 +80,12 @@ const collapsed = computed(() => uiStore.sidebarCollapsed);
     <!-- Nav -->
     <nav class="flex-1 overflow-y-auto py-3 px-3">
       <ul class="space-y-1">
-        <template v-for="item in visibleMenu" :key="item.id">
-          <li v-if="item.children?.length">
-            <div v-if="!collapsed" class="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              {{ item.label }}
-            </div>
-            <div v-else class="my-2 mx-2 border-t border-slate-200 dark:border-slate-700" />
-            <ul class="space-y-0.5">
-              <li v-for="child in item.children" :key="child.id">
-                <button
-                  @click="child.route_name && navigate(child.route_name)"
-                  :class="[
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
-                    isActive(child.route_name)
-                      ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
-                  ]"
-                  :title="collapsed ? child.label : undefined"
-                >
-                  <i v-if="child.icon" :class="child.icon" class="text-base w-5 text-center shrink-0" />
-                  <span v-if="!collapsed" class="truncate">{{ child.label }}</span>
-                </button>
-              </li>
-            </ul>
-          </li>
-          <li v-else>
-            <button
-              @click="item.route_name && navigate(item.route_name)"
-              :class="[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors',
-                isActive(item.route_name)
-                  ? 'bg-primary-50 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
-              ]"
-              :title="collapsed ? item.label : undefined"
-            >
-              <i v-if="item.icon" :class="item.icon" class="text-base w-5 text-center shrink-0" />
-              <span v-if="!collapsed" class="truncate">{{ item.label }}</span>
-            </button>
-          </li>
-        </template>
+        <SidebarItem 
+          v-for="item in visibleMenu" 
+          :key="item.id" 
+          :item="item" 
+          :collapsed="collapsed"
+        />
       </ul>
     </nav>
 

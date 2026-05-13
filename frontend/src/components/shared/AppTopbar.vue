@@ -70,6 +70,14 @@ const pageTitle = computed(() => {
 const toggleUserMenu = (event: Event) => {
   userMenuRef.value.toggle(event);
 };
+
+const handleToggle = () => {
+  if (window.innerWidth < 1024) {
+    uiStore.toggleMobileSidebar();
+  } else {
+    uiStore.toggleSidebar();
+  }
+};
 </script>
 
 <template>
@@ -77,22 +85,12 @@ const toggleUserMenu = (event: Event) => {
     <!-- Left: Hamburger + Page title -->
     <div class="flex items-center gap-3">
       <Button
-        @click="uiStore.toggleMobileSidebar"
+        @click="handleToggle"
         icon="pi pi-bars"
         severity="secondary"
         text
         rounded
-        class="lg:hidden"
-        aria-label="Toggle Menu"
-      />
-      <Button
-        @click="uiStore.toggleSidebar"
-        icon="pi pi-bars"
-        severity="secondary"
-        text
-        rounded
-        class="hidden lg:inline-flex"
-        aria-label="Toggle Sidebar"
+        aria-label="Toggle Navigation"
       />
       <div class="hidden sm:block">
         <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 leading-tight">{{ pageTitle }}</h2>

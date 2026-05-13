@@ -89,6 +89,32 @@ _PERMISSIONS = [
     ("exam.attendance.create",     "Enter Attendance",      "exam",     "create"),
 ]
 
+# Basic Menu items
+_MENUS = [
+    # Top level
+    {"id": 1, "parent_label": None, "label": "Dashboard", "icon": "pi pi-home", "route": "home", "perm": None, "order": 10},
+    {"id": 2, "parent_label": None, "label": "Academic", "icon": "pi pi-book", "route": None, "perm": None, "order": 20},
+    {"id": 3, "parent_label": None, "label": "Exam", "icon": "pi pi-chart-bar", "route": None, "perm": None, "order": 30},
+    {"id": 4, "parent_label": None, "label": "Reports", "icon": "pi pi-file", "route": None, "perm": "reports.view", "order": 40},
+    {"id": 5, "parent_label": None, "label": "Settings", "icon": "pi pi-cog", "route": None, "perm": "core.settings.view", "order": 100},
+    # Academic Children
+    {"id": 6, "parent_label": "Academic", "label": "Classes", "icon": None, "route": "academic.classes", "perm": "academic.classes.view", "order": 1},
+    {"id": 7, "parent_label": "Academic", "label": "Sections", "icon": None, "route": "academic.sections", "perm": "academic.sections.view", "order": 2},
+    {"id": 8, "parent_label": "Academic", "label": "Subjects", "icon": None, "route": "academic.subjects", "perm": "academic.subjects.view", "order": 3},
+    {"id": 9, "parent_label": "Academic", "label": "Class Subjects", "icon": None, "route": "academic.class-subjects", "perm": "academic.class_subjects.view", "order": 4},
+    {"id": 10, "parent_label": "Academic", "label": "Guardians", "icon": None, "route": "academic.guardians", "perm": "academic.guardians.view", "order": 5},
+    {"id": 11, "parent_label": "Academic", "label": "Students", "icon": None, "route": "academic.students", "perm": "academic.students.view", "order": 6},
+    {"id": 12, "parent_label": "Academic", "label": "Enrollments", "icon": None, "route": "academic.enrollments", "perm": "academic.enrollments.view", "order": 7},
+    # Exam Children
+    {"id": 13, "parent_label": "Exam", "label": "Exam Config", "icon": None, "route": "exam.types", "perm": "exam.exam_types.view", "order": 1},
+    {"id": 14, "parent_label": "Exam", "label": "Routines", "icon": None, "route": "exam.routines", "perm": "exam.routines.view", "order": 2},
+    {"id": 15, "parent_label": "Exam", "label": "Marks Entry", "icon": None, "route": "exam.marks", "perm": "exam.marks.entry", "order": 3},
+    {"id": 16, "parent_label": "Exam", "label": "Results", "icon": None, "route": "exam.results", "perm": "exam.results.view", "order": 4},
+    # Reports Children
+    {"id": 17, "parent_label": "Reports", "label": "Academic Reports", "icon": None, "route": "reports.academic", "perm": "reports.view", "order": 1},
+    {"id": 18, "parent_label": "Reports", "label": "Exam Reports", "icon": None, "route": "reports.exam", "perm": "reports.view", "order": 2},
+]
+
 
 def upgrade() -> None:
     from argon2 import PasswordHasher
@@ -153,6 +179,33 @@ def upgrade() -> None:
         {"uid": user_id, "rid": role_id},
     )
 
+    # 7. Basic Menus
+    label_to_id = {}
+    for menu in _MENUS:
+        parent_id = label_to_id.get(menu["parent_label"]) if menu["parent_label"] else None
+        
+        row = conn.execute(
+            sa.text(
+                "INSERT INTO core.menus (id, organization_id, parent_id, label, icon, route_name, permission_key, \"order\", is_active) "
+                "VALUES (:id, :org_id, :parent_id, :label, :icon, :route, :perm, :order, true) "
+                "ON CONFLICT (id) DO UPDATE SET "
+                "label = EXCLUDED.label, icon = EXCLUDED.icon, route_name = EXCLUDED.route_name, "
+                "permission_key = EXCLUDED.permission_key, \"order\" = EXCLUDED.\"order\" "
+                "RETURNING id"
+            ),
+            {
+                "id": menu["id"],
+                "org_id": org_id,
+                "parent_id": parent_id,
+                "label": menu["label"],
+                "icon": menu["icon"],
+                "route": menu["route"],
+                "perm": menu["perm"],
+                "order": menu["order"],
+            },
+        ).fetchone()
+        label_to_id[menu["label"]] = row[0]
+
 
 def downgrade() -> None:
     conn = op.get_bind()
@@ -161,4 +214,5 @@ def downgrade() -> None:
     conn.execute(sa.text("DELETE FROM auth.role_permissions"))
     conn.execute(sa.text("DELETE FROM auth.roles WHERE name = 'Admin'"))
     conn.execute(sa.text("DELETE FROM auth.permissions"))
+    conn.execute(sa.text("DELETE FROM core.menus"))
     conn.execute(sa.text("DELETE FROM core.organizations WHERE slug = 'default'"))
