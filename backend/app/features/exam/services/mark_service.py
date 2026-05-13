@@ -28,21 +28,27 @@ class MarkService:
         reg_repo = ExamRegistrationRepository(self._repo._db)
 
         results = []
-        for entry in payload.entries:
-            # Enforce exam registration
-            reg = await reg_repo.get_by_enroll_exam(entry.enrollment_id, payload.exam_type_id, org_id)
-            if not reg:
-                raise bad_request(f"Enrollment ID {entry.enrollment_id} is not registered for Exam Type ID {payload.exam_type_id}.")
+        try:
+            for entry in payload.entries:
+                # Enforce exam registration
+                reg = await reg_repo.get_by_enroll_exam(entry.enrollment_id, payload.exam_type_id, org_id)
+                if not reg:
+                    raise bad_request(f"Enrollment ID {entry.enrollment_id} is not registered for Exam Type ID {payload.exam_type_id}.")
 
-            mark = await self._repo.upsert(
-                org_id,
-                entry.enrollment_id,
-                entry.class_subject_id,
-                payload.exam_type_id,
-                {"marks_obtained": entry.marks_obtained, "is_absent": entry.is_absent},
-            )
-            results.append(MarkRead.model_validate(mark))
-        return results
+                mark = await self._repo.upsert(
+                    org_id,
+                    entry.enrollment_id,
+                    entry.class_subject_id,
+                    payload.exam_type_id,
+                    {"marks_obtained": entry.marks_obtained, "is_absent": entry.is_absent},
+                )
+                results.append(MarkRead.model_validate(mark))
+            
+            await self._repo._db.commit()
+            return results
+        except Exception:
+            await self._repo._db.rollback()
+            raise
 
     async def get_by_class_subject(
         self, exam_type_id: int, class_subject_id: int, org_id: int

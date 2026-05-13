@@ -1,5 +1,24 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import PageHeader from '@/components/shared/PageHeader.vue';
+import { reportsApi } from '../api/reports.api';
+import type { ExamSummary } from '../types/reports.types';
+
+const summary = ref<ExamSummary | null>(null);
+const loading = ref(true);
+
+const fetchSummary = async () => {
+  try {
+    const res = await reportsApi.getExamSummary();
+    summary.value = res.data.data!;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchSummary);
 </script>
 
 <template>
@@ -12,37 +31,58 @@ import PageHeader from '@/components/shared/PageHeader.vue';
         <div class="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900 flex items-center justify-center mx-auto mb-4">
           <i class="pi pi-file-check text-amber-600 dark:text-amber-400 text-2xl" />
         </div>
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Exam Reports</h2>
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Examination Summary</h2>
         <p class="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
-          Comprehensive examination analytics including results analysis, grade distribution, pass rates, and comparison reports.
+          Comprehensive summary of examination activities and result computations.
         </p>
       </div>
 
-      <!-- Coming soon content -->
+      <!-- Real Data Content -->
       <div class="p-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 text-center opacity-60">
-            <i class="pi pi-chart-bar text-2xl text-slate-400 mb-3 block" />
-            <h3 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Results Overview</h3>
-            <p class="text-xs text-slate-400 mt-1">Exam results summary and analysis</p>
+        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+          <div v-for="i in 3" :key="i" class="h-32 bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+        </div>
+        
+        <div v-else-if="summary" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="ems-card flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-amber-500">
+            <span class="text-4xl font-bold text-slate-900 dark:text-white">{{ summary.total_exam_types }}</span>
+            <span class="text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Exam Types</span>
           </div>
-          <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 text-center opacity-60">
-            <i class="pi pi-sort-alt text-2xl text-slate-400 mb-3 block" />
-            <h3 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Grade Distribution</h3>
-            <p class="text-xs text-slate-400 mt-1">GPA and grade frequency analysis</p>
+          <div class="ems-card flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-orange-500">
+            <span class="text-4xl font-bold text-slate-900 dark:text-white">{{ summary.total_marks_entered }}</span>
+            <span class="text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Marks Entered</span>
           </div>
-          <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-5 text-center opacity-60">
-            <i class="pi pi-arrows-h text-2xl text-slate-400 mb-3 block" />
-            <h3 class="font-semibold text-slate-700 dark:text-slate-300 text-sm">Comparison Reports</h3>
-            <p class="text-xs text-slate-400 mt-1">Cross-exam and year-over-year comparison</p>
+          <div class="ems-card flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-red-500">
+            <span class="text-4xl font-bold text-slate-900 dark:text-white">{{ summary.total_results_computed }}</span>
+            <span class="text-sm text-slate-500 dark:text-slate-400 mt-2 uppercase tracking-wider font-semibold">Results Computed</span>
           </div>
         </div>
 
-        <div class="mt-8 text-center">
-          <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-sm font-medium">
-            <i class="pi pi-clock" />
-            Coming Soon
-          </span>
+        <!-- Detailed Reports Section -->
+        <div class="mt-12">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Exam Analytics</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center text-xl">
+                  <i class="pi pi-chart-bar" />
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-800 dark:text-slate-200">Grade Distribution</h4>
+                  <p class="text-xs text-slate-500">Analyze GPA and grade frequency across exams</p>
+                </div>
+                <i class="pi pi-chevron-right ml-auto text-slate-300 group-hover:text-primary-500 transition-colors" />
+             </div>
+             <div class="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                <div class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-xl">
+                  <i class="pi pi-file-pdf" />
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-800 dark:text-slate-200">Tabulation Sheets</h4>
+                  <p class="text-xs text-slate-500">Generate and export class-wise tabulation sheets</p>
+                </div>
+                <i class="pi pi-chevron-right ml-auto text-slate-300 group-hover:text-primary-500 transition-colors" />
+             </div>
+          </div>
         </div>
       </div>
     </div>

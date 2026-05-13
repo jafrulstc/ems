@@ -81,8 +81,6 @@ app.openapi = _custom_openapi
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
-app.add_middleware(TenantMiddleware)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
@@ -90,6 +88,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(TenantMiddleware)
 
 
 # ── Global exception handlers ─────────────────────────────────────────────────
@@ -116,8 +116,10 @@ from app.features.core.storage_router import router as storage_router
 from app.features.auth.router import router as auth_router
 from app.features.academic.router import router as academic_router
 from app.features.exam.router import router as exam_router
+from app.features.reports.router import router as reports_router
 app.include_router(core_router, prefix="/api/v1/core", tags=["Core"])
 app.include_router(storage_router, prefix="/api/v1/storage", tags=["Storage"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(academic_router, prefix="/api/v1/academic", tags=["Academic"])
 app.include_router(exam_router, prefix="/api/v1/exam", tags=["Exam"])
+app.include_router(reports_router, prefix="/api/v1/reports", tags=["Reports"])
