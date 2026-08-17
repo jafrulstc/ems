@@ -1,0 +1,14 @@
+# Local Netlify folder
+.netlify
+.env
+
+# Nginx / Runtime logs and temp files
+temp/
+
+# IDE / Editors
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
