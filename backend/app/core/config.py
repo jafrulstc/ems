@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Education Management System"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
-    ALLOWED_ORIGINS: list[str] = []
+    ALLOWED_ORIGINS: list[str] | str = []
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
