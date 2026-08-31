@@ -1,9 +1,25 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Literal
+from typing import Literal, Any
+from pydantic import field_validator
+import json
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Education Management System"
     API_V1_STR: str = "/api/v1"
+    DEBUG: bool = False
+    ALLOWED_ORIGINS: list[str] = []
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except ValueError:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        return v
     DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

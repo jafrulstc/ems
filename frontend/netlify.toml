@@ -1,0 +1,19 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
