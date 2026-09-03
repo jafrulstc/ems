@@ -146,4 +146,12 @@ const handleLogin = async () => {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(62, 130, 247, 0.3);
 }
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+}
 </style>

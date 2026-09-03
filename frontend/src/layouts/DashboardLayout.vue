@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import Button from 'primevue/button';
@@ -8,6 +8,23 @@ import Avatar from 'primevue/avatar';
 const authStore = useAuthStore();
 const router = useRouter();
 const isSidebarCollapsed = ref(false);
+const isMobile = ref(false);
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+  if (isMobile.value) {
+    isSidebarCollapsed.value = true;
+  }
+};
+
+onMounted(() => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile);
+});
 
 const handleLogout = () => {
   authStore.logout();
@@ -16,6 +33,12 @@ const handleLogout = () => {
 
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
+};
+
+const closeSidebarOnMobile = () => {
+  if (isMobile.value) {
+    isSidebarCollapsed.value = true;
+  }
 };
 
 const menuItems = [
@@ -29,11 +52,18 @@ const menuItems = [
 
 <template>
   <div class="layout-container">
+    <!-- Mobile Overlay -->
+    <div 
+      class="mobile-overlay" 
+      :class="{ 'active': !isSidebarCollapsed && isMobile }" 
+      @click="toggleSidebar"
+    ></div>
+
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'collapsed': isSidebarCollapsed }">
       <div class="sidebar-header">
         <div class="logo-box">EMS</div>
-        <h2 v-if="!isSidebarCollapsed">EduManage</h2>
+        <h2 v-if="!isSidebarCollapsed || isMobile">EduManage</h2>
       </div>
       
       <nav class="sidebar-nav">
@@ -43,9 +73,10 @@ const menuItems = [
           :to="{ name: item.route }" 
           class="nav-item"
           active-class="active"
+          @click="closeSidebarOnMobile"
         >
           <i :class="item.icon"></i>
-          <span v-if="!isSidebarCollapsed">{{ item.label }}</span>
+          <span v-if="!isSidebarCollapsed || isMobile">{{ item.label }}</span>
         </router-link>
       </nav>
     </aside>
@@ -91,10 +122,10 @@ const menuItems = [
   width: 260px;
   background: #ffffff;
   border-right: 1px solid #e4e7eb;
-  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
-  z-index: 10;
+  z-index: 100;
 }
 
 .sidebar.collapsed {
@@ -169,6 +200,19 @@ const menuItems = [
   color: #3e82f7;
 }
 
+/* Mobile Overlay */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 90;
+  backdrop-filter: blur(2px);
+}
+
 /* Main Content Styles */
 .main-wrapper {
   flex: 1;
@@ -208,6 +252,7 @@ const menuItems = [
   font-weight: 700;
   letter-spacing: 0.5px;
   margin: 0;
+  white-space: nowrap;
 }
 
 .avatar {
@@ -230,5 +275,41 @@ const menuItems = [
 .fade-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    transform: translateX(0);
+    width: 260px;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 260px; /* Keep full width, just hide it */
+  }
+
+  .mobile-overlay.active {
+    display: block;
+  }
+
+  .topbar {
+    padding: 0 1rem;
+  }
+  
+  .tenant-badge {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .page-content {
+    padding: 1rem;
+  }
 }
 </style>

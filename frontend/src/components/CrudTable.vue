@@ -119,7 +119,7 @@ function confirmDelete(row: any) {
       <Button :label="`Add ${title.slice(0,-1)}`" icon="pi pi-plus" size="small" @click="openCreate" />
     </div>
 
-    <DataTable :value="rows" :loading="loading" responsiveLayout="scroll" stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)">
+    <DataTable :value="rows" :loading="loading" scrollable stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)">
       <Column v-for="col in columns.filter(c => !c.hideInTable)" :key="col.field" :field="col.displayField || col.field" :header="col.header" sortable>
         <template #body="{ data }">
           <span v-if="col.type === 'boolean'">
@@ -142,7 +142,7 @@ function confirmDelete(row: any) {
     </DataTable>
   </div>
 
-  <Dialog v-model:visible="dialogVisible" :header="dialogTitle" modal style="width: 440px">
+  <Dialog v-model:visible="dialogVisible" :header="dialogTitle" modal :style="{ width: '90vw', maxWidth: '440px' }">
     <div class="dialog-form">
       <div v-for="col in columns" :key="col.field" class="field" :class="{ 'row-field': col.type === 'boolean' }">
         <label v-if="col.type !== 'boolean'">
@@ -196,22 +196,30 @@ function confirmDelete(row: any) {
   align-items: center;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #f0f4f8;
+  gap: 1rem;
 }
 .table-title {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex: 1;
 }
 .table-header h3 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: #334e68;
+  white-space: nowrap;
+}
+.search-input {
+  max-width: 300px;
+  width: 100%;
 }
 .search-input :deep(.p-inputtext) {
   padding: 0.4rem 0.5rem 0.4rem 2.25rem;
   border-radius: 6px;
   font-size: 0.85rem;
+  width: 100%;
 }
 .action-btns { display: flex; gap: 4px; }
 .dialog-form { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0; }
@@ -236,5 +244,22 @@ function confirmDelete(row: any) {
 :deep(.p-dropdown) {
   border-radius: 6px;
   border-color: #cbd5e1;
+}
+
+/* Responsive adjustments for CrudTable */
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+  .table-title {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .search-input {
+    max-width: 100%;
+  }
 }
 </style>
