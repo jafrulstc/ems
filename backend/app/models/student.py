@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import String, ForeignKey, Date, Integer
+from sqlalchemy import String, ForeignKey, Date, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin
 
@@ -13,8 +13,12 @@ class Guardian(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
 
 class Student(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "students"
-    __table_args__ = {"schema": "student"}
-    student_id_no: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    __table_args__ = (
+        # student_id_no must be unique per tenant (institute), not globally
+        UniqueConstraint("student_id_no", "tenant_id", name="uq_student_id_no_per_tenant"),
+        {"schema": "student"},
+    )
+    student_id_no: Mapped[int] = mapped_column(Integer, index=True)
     first_name: Mapped[str] = mapped_column(String)
     last_name: Mapped[str] = mapped_column(String)
     date_of_birth: Mapped[Date] = mapped_column(Date)
@@ -36,5 +40,7 @@ class Enrollment(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     academic_year_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("academic.academic_years.id"))
     class_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("academic.classes.id"))
     section_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("academic.sections.id"), nullable=True)
+    branch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenant.branches.id"))
     
     status: Mapped[str] = mapped_column(String, default="active")
+

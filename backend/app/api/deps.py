@@ -10,7 +10,7 @@ from app.db.session import get_db
 from app.models.auth import User
 from app.models.tenant import Institute
 from app.schemas.auth import TokenPayload
-from app.core.context import tenant_context, user_context
+from app.core.context import tenant_context, user_context, branch_context
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
@@ -52,8 +52,12 @@ async def get_current_user(db: SessionDep, token: TokenDep, tenant: TenantDep) -
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
-        
+    
+    # Set both user and branch context for downstream use
     user_context.set(user)
+    if user.branch_id:
+        branch_context.set(user.branch_id)
+        
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

@@ -21,10 +21,13 @@ class UserRead(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    tenant_slug: str | None = None
+    branch_id: str | None = None
 
 class TokenPayload(BaseModel):
     sub: str
     tenant_id: str
+    branch_id: str | None = None
     exp: int
 
 class LoginRequest(BaseModel):

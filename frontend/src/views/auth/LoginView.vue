@@ -6,9 +6,8 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 
-const email = ref('super@test.com');
-const password = ref('password');
-const tenantSlug = ref('test_institute');
+const email = ref('');
+const password = ref('');
 const isLoading = ref(false);
 const error = ref('');
 
@@ -19,7 +18,7 @@ const handleLogin = async () => {
   try {
     isLoading.value = true;
     error.value = '';
-    await authStore.login(email.value, password.value, tenantSlug.value);
+    await authStore.login(email.value, password.value);
     router.push({ name: 'dashboard' });
   } catch (err: any) {
     error.value = err.response?.data?.detail || 'Invalid login credentials.';
@@ -38,10 +37,7 @@ const handleLogin = async () => {
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <label for="tenant">Tenant Slug</label>
-          <InputText id="tenant" v-model="tenantSlug" required placeholder="e.g. global" />
-        </div>
+
 
         <div class="form-group">
           <label for="email">Email Address</label>

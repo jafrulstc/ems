@@ -42,6 +42,7 @@ class EnrollmentBase(BaseModel):
     academic_year_id: uuid.UUID
     class_id: uuid.UUID
     section_id: uuid.UUID | None = None
+    branch_id: uuid.UUID
     status: str = "active"
 
 class EnrollmentCreate(EnrollmentBase):
