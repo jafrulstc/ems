@@ -72,7 +72,7 @@ const classOptions = computed(() => classes.value.map(c => ({ label: c.name, val
 const sectionOptions = computed(() => sections.value.map(s => ({ label: s.name, value: s.id })));
 const branchOptions = computed(() => branches.value.map(b => ({ label: b.name, value: b.id })));
 const guardianOptions = computed(() => guardians.value.map(g => ({ label: `${g.name} (${g.phone})`, value: g.id })));
-const studentOptions = computed(() => students.value.map(s => ({ label: `${s.student_id_no ? s.student_id_no + ' - ' : ''}${s.first_name} ${s.last_name}`, value: s.id })));
+const studentOptions = computed(() => students.value.map(s => ({ label: `${s.student_id_no ? s.student_id_no + ' - ' : ''}${s.full_name}`, value: s.id })));
 
 const statusOptions = [
   { label: 'Active', value: 'active' },
@@ -84,8 +84,7 @@ const statusOptions = [
 
 const studentCols = computed(() => [
   { field: 'student_id_no', header: 'Student ID No.', type: 'number' as const, required: true, defaultValue: nextStudentIdNo.value },
-  { field: 'first_name', header: 'First Name', required: true },
-  { field: 'last_name', header: 'Last Name', required: true },
+  { field: 'full_name', header: 'Full Name', required: true },
   { field: 'branch_id', header: 'Branch', type: 'select' as const, options: branchOptions.value, required: true },
   { field: 'guardian_id', header: 'Guardian', type: 'select' as const, options: guardianOptions.value },
   { field: 'gender', header: 'Gender', type: 'select' as const, options: [{label: 'Male', value: 'Male'}, {label: 'Female', value: 'Female'}, {label: 'Other', value: 'Other'}], required: true },

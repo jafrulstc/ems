@@ -173,7 +173,7 @@ class StudentService:
                 "roll_number": enr.roll_number,
                 "student_id": std.id,
                 "student_id_no": std.student_id_no,
-                "student_name": f"{std.first_name} {std.last_name}",
+                "student_name": std.full_name,
                 "gender": std.gender,
             }
             for enr, std in records

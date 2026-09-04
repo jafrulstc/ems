@@ -84,9 +84,9 @@ async def seed_test_institute():
         await session.flush()
 
         # Students
-        s1 = Student(first_name="Rahim", last_name="Miah", gender="Male", date_of_birth=datetime.date(2010, 5, 12), guardian_id=g1.id, branch_id=branch.id, tenant_id=tenant_id)
-        s2 = Student(first_name="Karim", last_name="Hossain", gender="Male", date_of_birth=datetime.date(2010, 8, 22), guardian_id=g1.id, branch_id=branch.id, tenant_id=tenant_id)
-        s3 = Student(first_name="Salma", last_name="Khatun", gender="Female", date_of_birth=datetime.date(2011, 2, 10), guardian_id=g2.id, branch_id=branch.id, tenant_id=tenant_id)
+        s1 = Student(student_id_no=1, full_name="Rahim Miah", gender="Male", date_of_birth=datetime.date(2010, 5, 12), guardian_id=g1.id, branch_id=branch.id, tenant_id=tenant_id)
+        s2 = Student(student_id_no=2, full_name="Karim Hossain", gender="Male", date_of_birth=datetime.date(2010, 8, 22), guardian_id=g1.id, branch_id=branch.id, tenant_id=tenant_id)
+        s3 = Student(student_id_no=3, full_name="Salma Khatun", gender="Female", date_of_birth=datetime.date(2011, 2, 10), guardian_id=g2.id, branch_id=branch.id, tenant_id=tenant_id)
         session.add_all([s1, s2, s3])
         await session.flush()
 

@@ -78,8 +78,8 @@ class ExamService:
 
         updated_count = 0
         for res in results:
-            sched = schedule_map.get(res.exam_schedule_id)
-            if not sched or sched.full_marks == 0:
+            schedule = schedule_map.get(res.exam_schedule_id)
+            if not schedule or schedule.full_marks == 0:
                 continue
 
             status = getattr(res, "status", "PRESENT") or "PRESENT"
@@ -88,7 +88,7 @@ class ExamService:
                 # Absent / Withheld / Expelled — use status string as grade marker
                 assigned_grade = status
             else:
-                percentage = (res.obtained_marks / sched.full_marks) * 100
+                percentage = (res.obtained_marks / schedule.full_marks) * 100
                 assigned_grade = None
                 for scale in sorted(scales, key=lambda s: s.min_marks, reverse=True):
                     if scale.min_marks <= percentage <= scale.max_marks:
@@ -157,8 +157,7 @@ class ExamService:
             Enrollment.class_id,
             Enrollment.academic_year_id,
             Enrollment.roll_number,
-            Student.first_name,
-            Student.last_name,
+            Student.full_name,
             Student.student_id_no,
             AcademicClass.name.label("class_name"),
             AcademicYear.name.label("academic_year_name"),
@@ -203,7 +202,7 @@ class ExamService:
                     "enrollment_id": row.enrollment_id,
                     "exam_id": row.exam_id,
                     "exam_name": row.exam_name,
-                    "student_name": f"{row.first_name} {row.last_name}",
+                    "student_name": row.full_name,
                     "student_id_no": row.student_id_no,
                     "roll_number": row.roll_number,
                     "class_id": row.class_id,

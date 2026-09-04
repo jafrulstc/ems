@@ -22,8 +22,7 @@ class Student(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
         {"schema": "student"},
     )
     student_id_no: Mapped[int] = mapped_column(Integer, index=True)
-    first_name: Mapped[str] = mapped_column(String)
-    last_name: Mapped[str] = mapped_column(String)
+    full_name: Mapped[str] = mapped_column(String)
     date_of_birth: Mapped[Date] = mapped_column(Date)
     gender: Mapped[str] = mapped_column(String)
     blood_group: Mapped[str | None] = mapped_column(String, nullable=True)

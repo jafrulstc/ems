@@ -157,7 +157,7 @@ const getStudentInfo = (enrollmentId: string) => {
   const enrollment = enrollments.value.find(e => e.id === enrollmentId);
   if (enrollment) {
     const student = students.value.find(s => s.id === enrollment.student_id);
-    const studentName = student ? `${student.first_name} ${student.last_name}` : 'Student';
+    const studentName = student ? student.full_name : 'Student';
     const rollNo = enrollment.roll_number || enrollment.enrollment_number;
     return `${studentName} (Roll: ${rollNo})`;
   }

@@ -135,8 +135,8 @@ async def seed_large_demo():
             for roll in range(1, num_students + 1):
                 gender = random.choice(["Male", "Female"])
                 stu = Student(
-                    first_name=random.choice(first_names),
-                    last_name=random.choice(last_names),
+                    student_id_no=roll,
+                    full_name=random.choice(first_names) + " " + random.choice(last_names),
                     gender=gender,
                     date_of_birth=datetime.date(2015 - int(cls_name.split()[1]), random.randint(1, 12), random.randint(1, 28)),
                     guardian_id=random.choice(guardians).id,
