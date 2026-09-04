@@ -7,7 +7,7 @@ Business logic for Student, Guardian, and Enrollment management.
 import uuid
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.student import Enrollment, Guardian, Student
@@ -57,8 +57,31 @@ class StudentService:
     # ── Student ───────────────────────────────────────────────────────────────
 
     @staticmethod
+    async def get_next_student_id_no(tenant_id: uuid.UUID, session: AsyncSession) -> int:
+        """Return the next available student_id_no for the given tenant (1-based, no gaps allowed)."""
+        result = await session.execute(
+            select(func.max(Student.student_id_no)).where(Student.tenant_id == tenant_id)
+        )
+        current_max = result.scalar_one_or_none()
+        return (current_max or 0) + 1
+
+    @staticmethod
     async def create_student(data: StudentCreate, tenant_id: uuid.UUID, session: AsyncSession) -> Student:
-        db = Student(**data.model_dump(), tenant_id=tenant_id)
+        """
+        Safely assign student_id_no:
+        - UI sends a suggested student_id_no (pre-filled from get_next_student_id_no).
+        - At save-time, re-check the actual max in the DB (handles concurrent inserts).
+        - If the suggested ID is still free, use it; otherwise use max+1.
+        """
+        result = await session.execute(
+            select(func.max(Student.student_id_no)).where(Student.tenant_id == tenant_id)
+        )
+        current_max = result.scalar_one_or_none() or 0
+        safe_id = max(data.student_id_no, current_max + 1)
+
+        dump = data.model_dump()
+        dump["student_id_no"] = safe_id
+        db = Student(**dump, tenant_id=tenant_id)
         session.add(db)
         await session.commit()
         await session.refresh(db)

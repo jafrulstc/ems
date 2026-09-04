@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { AcademicService } from '../../services/academic.service';
 import { TenantService } from '../../services/tenant.service';
-import CrudTable from '../../components/CrudTable.vue';
 import Toast from 'primevue/toast';
+
+import AcademicYearsTab from './tabs/AcademicYearsTab.vue';
+import DepartmentsTab from './tabs/DepartmentsTab.vue';
+import ClassesTab from './tabs/ClassesTab.vue';
+import SectionsTab from './tabs/SectionsTab.vue';
+import ShiftsTab from './tabs/ShiftsTab.vue';
+import SubjectsTab from './tabs/SubjectsTab.vue';
+import SubjectAssignsTab from './tabs/SubjectAssignsTab.vue';
 
 const toast = useToast();
 const activeTab = ref('years');
@@ -18,17 +25,6 @@ const shifts = ref<any[]>([]);
 const yearlyClassSubjects = ref<any[]>([]);
 const branches = ref<any[]>([]);
 const loading = ref(true);
-
-const filterYearId = ref<string | null>(null);
-const filterClassId = ref<string | null>(null);
-
-const filteredYcs = computed(() => {
-  return yearlyClassSubjects.value.filter(ycs => {
-    if (filterYearId.value && ycs.academic_year_id !== filterYearId.value) return false;
-    if (filterClassId.value && ycs.class_id !== filterClassId.value) return false;
-    return true;
-  });
-});
 
 const load = async () => {
   loading.value = true;
@@ -61,66 +57,6 @@ const tabs = [
   { id: 'subjects', label: 'Subjects', icon: 'pi pi-book' },
   { id: 'ycs', label: 'Subject Assigns', icon: 'pi pi-sitemap' },
 ];
-
-
-const yearCols = [
-  { field: 'name', header: 'Year Name' },
-  { field: 'start_date', header: 'Start Date', type: 'date' as const },
-  { field: 'end_date', header: 'End Date', type: 'date' as const },
-];
-
-const deptCols = [
-  { field: 'name', header: 'Department Name' },
-  { field: 'level', header: 'Academic Level (e.g., SSC, HSC, BSC)' },
-];
-
-const departmentOptions = computed(() => {
-  return departments.value.map(d => ({ label: `${d.name} (${d.level || 'General'})`, value: d.id }));
-});
-
-const classCols = computed(() => [
-  { field: 'name', header: 'Class Name' },
-  { field: 'level', header: 'Level (e.g. SSC, HSC, BSC)' },
-  {
-    field: 'department_id',
-    displayField: 'department_name',
-    header: 'Department',
-    type: 'select' as const,
-    options: departmentOptions.value
-  },
-]);
-
-const sectionCols = computed(() => [
-  { field: 'name', header: 'Section Name' },
-  { field: 'branch_id', header: 'Branch', type: 'select' as const, options: branchOptions.value },
-  { field: 'class_id', header: 'Class', type: 'select' as const, options: classOptions.value },
-  { field: 'shift_id', header: 'Shift', type: 'select' as const, options: shiftOptions.value },
-]);
-
-const subjectCols = computed(() => [
-  { field: 'name', header: 'Subject Name' },
-  { field: 'code', header: 'Code' },
-]);
-
-const shiftCols = [
-  { field: 'name', header: 'Shift Name' },
-  { field: 'start_time', header: 'Start Time' },
-  { field: 'end_time', header: 'End Time' },
-];
-
-const yearOptions = computed(() => years.value.map(y => ({ label: y.name, value: y.id })));
-const classOptions = computed(() => classes.value.map(c => ({ label: c.name, value: c.id })));
-const shiftOptions = computed(() => shifts.value.map(s => ({ label: s.name, value: s.id })));
-const branchOptions = computed(() => branches.value.map(b => ({ label: b.name, value: b.id })));
-const subjectOptions = computed(() => subjects.value.map(s => ({ label: s.name, value: s.id })));
-
-const ycsCols = computed(() => [
-  { field: 'academic_year_id', header: 'Academic Year', type: 'select' as const, options: yearOptions.value },
-  { field: 'class_id', header: 'Class', type: 'select' as const, options: classOptions.value },
-  { field: 'subject_id', header: 'Subject', type: 'select' as const, options: subjectOptions.value },
-  { field: 'is_main_subject', header: 'Is Main Subject?', type: 'boolean' as const },
-  { field: 'affects_result_calculation', header: 'Affects Result?', type: 'boolean' as const },
-]);
 </script>
 
 <template>
@@ -150,113 +86,13 @@ const ycsCols = computed(() => [
 
     <!-- Tab Content Panels -->
     <div class="tab-content">
-      <div v-if="activeTab === 'years'">
-        <CrudTable 
-          title="Academic Years" 
-          :rows="years" 
-          :columns="yearCols" 
-          :loading="loading"
-          :createFn="AcademicService.createYear"
-          :updateFn="AcademicService.updateYear"
-          :deleteFn="AcademicService.deleteYear"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'departments'">
-        <CrudTable 
-          title="Departments" 
-          :rows="departments" 
-          :columns="deptCols" 
-          :loading="loading"
-          :createFn="AcademicService.createDepartment"
-          :updateFn="AcademicService.updateDepartment"
-          :deleteFn="AcademicService.deleteDepartment"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'classes'">
-        <CrudTable 
-          title="Classes" 
-          :rows="classes" 
-          :columns="classCols" 
-          :loading="loading"
-          :createFn="AcademicService.createClass"
-          :updateFn="AcademicService.updateClass"
-          :deleteFn="AcademicService.deleteClass"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'sections'">
-        <CrudTable 
-          title="Sections" 
-          :rows="sections" 
-          :columns="sectionCols" 
-          :loading="loading"
-          :createFn="AcademicService.createSection"
-          :updateFn="AcademicService.updateSection"
-          :deleteFn="AcademicService.deleteSection"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'shifts'">
-        <CrudTable 
-          title="Shifts" 
-          :rows="shifts" 
-          :columns="shiftCols" 
-          :loading="loading"
-          :createFn="AcademicService.createShift"
-          :updateFn="AcademicService.updateShift"
-          :deleteFn="AcademicService.deleteShift"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'ycs'">
-        <div class="filter-card">
-          <div class="filter-group">
-            <label>Filter by Academic Year</label>
-            <select v-model="filterYearId" class="custom-select">
-              <option :value="null">-- All Years --</option>
-              <option v-for="y in years" :key="y.id" :value="y.id">{{ y.name }}</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Filter by Class</label>
-            <select v-model="filterClassId" class="custom-select">
-              <option :value="null">-- All Classes --</option>
-              <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
-          </div>
-        </div>
-
-        <CrudTable 
-          title="Yearly Class Subjects" 
-          :rows="filteredYcs" 
-          :columns="ycsCols" 
-          :loading="loading"
-          :createFn="AcademicService.createYearlyClassSubject"
-          :updateFn="AcademicService.updateYearlyClassSubject"
-          :deleteFn="AcademicService.deleteYearlyClassSubject"
-          @refresh="load" 
-        />
-      </div>
-
-      <div v-if="activeTab === 'subjects'">
-        <CrudTable 
-          title="Subjects" 
-          :rows="subjects" 
-          :columns="subjectCols" 
-          :loading="loading"
-          :createFn="AcademicService.createSubject"
-          :updateFn="AcademicService.updateSubject"
-          :deleteFn="AcademicService.deleteSubject"
-          @refresh="load" 
-        />
-      </div>
+      <AcademicYearsTab v-if="activeTab === 'years'" :years="years" :loading="loading" @refresh="load" />
+      <DepartmentsTab v-if="activeTab === 'departments'" :departments="departments" :loading="loading" @refresh="load" />
+      <ClassesTab v-if="activeTab === 'classes'" :classes="classes" :departments="departments" :loading="loading" @refresh="load" />
+      <SectionsTab v-if="activeTab === 'sections'" :sections="sections" :branches="branches" :classes="classes" :shifts="shifts" :loading="loading" @refresh="load" />
+      <ShiftsTab v-if="activeTab === 'shifts'" :shifts="shifts" :loading="loading" @refresh="load" />
+      <SubjectAssignsTab v-if="activeTab === 'ycs'" :yearlyClassSubjects="yearlyClassSubjects" :years="years" :classes="classes" :subjects="subjects" :loading="loading" @refresh="load" />
+      <SubjectsTab v-if="activeTab === 'subjects'" :subjects="subjects" :loading="loading" @refresh="load" />
     </div>
   </div>
 </template>
@@ -311,45 +147,5 @@ const ycsCols = computed(() => [
 }
 .tab-content {
   margin-top: 0.5rem;
-}
-
-/* Filter Card */
-.filter-card {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  background: white;
-  padding: 1.25rem;
-  border-radius: 12px;
-  border: 1px solid #f0f4f8;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04);
-}
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 200px;
-}
-.filter-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
-}
-.custom-select {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: #fff;
-  color: #1e293b;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-.custom-select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 </style>

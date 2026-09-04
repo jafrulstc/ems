@@ -30,6 +30,7 @@ const props = defineProps<{
   createFn: (data: any) => Promise<any>;
   updateFn: (id: string, data: any) => Promise<any>;
   deleteFn: (id: string) => Promise<any>;
+  afterCreate?: (created: any) => string; // optional: return a custom success message string
 }>();
 
 const emit = defineEmits<{ refresh: [] }>();
@@ -72,8 +73,9 @@ async function save() {
       await props.updateFn(editingRow.value.id, form.value);
       toast.add({ severity: 'success', summary: 'Updated', life: 2000 });
     } else {
-      await props.createFn(form.value);
-      toast.add({ severity: 'success', summary: 'Created', life: 2000 });
+      const created = await props.createFn(form.value);
+      const msg = props.afterCreate ? props.afterCreate(created) : 'Created';
+      toast.add({ severity: 'success', summary: msg, life: 3000 });
     }
     dialogVisible.value = false;
     emit('refresh');

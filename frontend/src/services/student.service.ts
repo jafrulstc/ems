@@ -8,6 +8,7 @@ export const StudentService = {
   deleteGuardian: (id: string) => api.delete(`/student/guardians/${id}`).then(r => r.data),
   // Students
   getStudents: () => api.get('/student/students').then(r => r.data),
+  getNextStudentIdNo: () => api.get('/student/students/next-id').then(r => r.data.next_student_id_no as number),
   createStudent: (data: any) => api.post('/student/students', data).then(r => r.data),
   updateStudent: (id: string, data: any) => api.put(`/student/students/${id}`, data).then(r => r.data),
   deleteStudent: (id: string) => api.delete(`/student/students/${id}`).then(r => r.data),

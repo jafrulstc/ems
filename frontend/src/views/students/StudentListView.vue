@@ -18,6 +18,7 @@ const classes = ref<any[]>([]);
 const sections = ref<any[]>([]);
 const branches = ref<any[]>([]);
 const loading = ref(true);
+const nextStudentIdNo = ref<number>(1);
 
 const filterYearId = ref<string | null>(null);
 const filterClassId = ref<string | null>(null);
@@ -33,7 +34,7 @@ const filteredEnrollments = computed(() => {
 const load = async () => {
   loading.value = true;
   try {
-    const [st, gu, en, yr, cl, se, br] = await Promise.all([
+    const [st, gu, en, yr, cl, se, br, nextId] = await Promise.all([
       StudentService.getStudents(),
       StudentService.getGuardians(),
       StudentService.getEnrollments(),
@@ -41,6 +42,7 @@ const load = async () => {
       AcademicService.getClasses().catch(() => []),
       AcademicService.getSections().catch(() => []),
       TenantService.getBranches().catch(() => []),
+      StudentService.getNextStudentIdNo().catch(() => 1),
     ]);
     students.value = st;
     guardians.value = gu;
@@ -49,6 +51,7 @@ const load = async () => {
     classes.value = cl;
     sections.value = se;
     branches.value = br;
+    nextStudentIdNo.value = nextId;
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Load failed', life: 3000 });
   } finally {
@@ -80,7 +83,7 @@ const statusOptions = [
 ];
 
 const studentCols = computed(() => [
-  { field: 'student_id_no', header: 'Student ID No.', type: 'number' as const, required: true },
+  { field: 'student_id_no', header: 'Student ID No.', type: 'number' as const, required: true, defaultValue: nextStudentIdNo.value },
   { field: 'first_name', header: 'First Name', required: true },
   { field: 'last_name', header: 'Last Name', required: true },
   { field: 'branch_id', header: 'Branch', type: 'select' as const, options: branchOptions.value, required: true },
@@ -157,6 +160,7 @@ const enrollmentCols = computed(() => [
           :createFn="StudentService.createStudent"
           :updateFn="StudentService.updateStudent"
           :deleteFn="StudentService.deleteStudent"
+          :afterCreate="(s: any) => `Student created! Assigned ID: ${s.student_id_no}`"
           @refresh="load" 
         />
       </div>

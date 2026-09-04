@@ -48,6 +48,12 @@ async def delete_guardian(guardian_id: str, session: SessionDep, tenant: TenantD
 async def create_student(session: SessionDep, tenant: TenantDep, student_in: StudentCreate) -> Any:
     return await StudentService.create_student(student_in, tenant.id, session)
 
+@router.get("/students/next-id", dependencies=[Depends(require_permission("student:read"))])
+async def get_next_student_id(session: SessionDep, tenant: TenantDep) -> Any:
+    """Return the next suggested student_id_no for this tenant (1-based, unique per tenant)."""
+    next_id = await StudentService.get_next_student_id_no(tenant.id, session)
+    return {"next_student_id_no": next_id}
+
 @router.get("/students", response_model=list[StudentRead], dependencies=[Depends(require_permission("student:read"))])
 async def read_students(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
     return await StudentService.get_students(session, skip, limit)
