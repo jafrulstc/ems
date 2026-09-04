@@ -112,6 +112,7 @@ const enrollmentCols = computed(() => [
     }, 
     required: true 
   },
+  { field: 'branch_id', header: 'Branch', type: 'select' as const, options: branchOptions.value, required: true },
   { field: 'class_id', header: 'Class', type: 'select' as const, options: classOptions.value, required: true },
   { field: 'section_id', header: 'Section', type: 'select' as const, options: sectionOptions.value },
   { field: 'roll_number', header: 'Roll No.' },

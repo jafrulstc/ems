@@ -11,45 +11,102 @@ from app.models.exam import Exam, ExamResult, ExamSchedule, GradingScale
 class ExamService:
     @staticmethod
     async def generate_exam_results(exam_id: uuid.UUID, session: AsyncSession) -> dict:
-        # Get exam schedules for the exam
-        schedules = (await session.execute(select(ExamSchedule).where(ExamSchedule.exam_id == exam_id))).scalars().all()
+        """
+        For every ExamSchedule of this exam:
+          - Find all Enrollments whose class_id matches the schedule's class_id
+          - Auto-create any missing ExamResult row (obtained_marks=0, status=PRESENT)
+          - Re-calculate grade for all results of those schedules
+        This ensures result generation is strictly schedule-based:
+        a subject not in any schedule for this exam won't be touched.
+        """
+        from app.models.student import Enrollment
+
+        # 1. Get all schedules for this exam
+        schedules = (
+            await session.execute(select(ExamSchedule).where(ExamSchedule.exam_id == exam_id))
+        ).scalars().all()
         if not schedules:
             raise HTTPException(status_code=400, detail="No schedules found for this exam")
-        
+
         schedule_ids = [s.id for s in schedules]
         schedule_map = {s.id: s for s in schedules}
-        
-        # Get all results for these schedules
-        results = (await session.execute(select(ExamResult).where(ExamResult.exam_schedule_id.in_(schedule_ids)))).scalars().all()
-        
-        # Get all grading scales
+
+        # 2. For each schedule, find enrolled students in that class and auto-create missing results
+        created_count = 0
+        for sched in schedules:
+            enrollments = (
+                await session.execute(
+                    select(Enrollment).where(Enrollment.class_id == sched.class_id)
+                )
+            ).scalars().all()
+
+            for enrollment in enrollments:
+                # Check if result already exists for this enrollment + schedule
+                existing = (
+                    await session.execute(
+                        select(ExamResult).where(
+                            ExamResult.enrollment_id == enrollment.id,
+                            ExamResult.exam_schedule_id == sched.id,
+                        )
+                    )
+                ).scalar_one_or_none()
+
+                if not existing:
+                    new_result = ExamResult(
+                        enrollment_id=enrollment.id,
+                        exam_schedule_id=sched.id,
+                        obtained_marks=0.0,
+                        grade=None,
+                        status="PRESENT",
+                        tenant_id=enrollment.tenant_id,
+                    )
+                    session.add(new_result)
+                    created_count += 1
+
+        # Flush so newly created rows are queryable below
+        await session.flush()
+
+        # 3. Get grading scales
         scales = (await session.execute(select(GradingScale))).scalars().all()
-        
+
+        # 4. Re-calculate grades for all results belonging to this exam's schedules
+        results = (
+            await session.execute(
+                select(ExamResult).where(ExamResult.exam_schedule_id.in_(schedule_ids))
+            )
+        ).scalars().all()
+
         updated_count = 0
         for res in results:
             sched = schedule_map.get(res.exam_schedule_id)
             if not sched or sched.full_marks == 0:
                 continue
-                
-            percentage = (res.obtained_marks / sched.full_marks) * 100
-            
-            # Handle absent / withheld / expelled
-            if getattr(res, "status", "PRESENT") != "PRESENT":
-                assigned_grade = res.status
+
+            status = getattr(res, "status", "PRESENT") or "PRESENT"
+
+            if status != "PRESENT":
+                # Absent / Withheld / Expelled — use status string as grade marker
+                assigned_grade = status
             else:
-                # Find grade
+                percentage = (res.obtained_marks / sched.full_marks) * 100
                 assigned_grade = None
-                for scale in scales:
+                for scale in sorted(scales, key=lambda s: s.min_marks, reverse=True):
                     if scale.min_marks <= percentage <= scale.max_marks:
                         assigned_grade = scale.grade_name
                         break
-                    
+
             if assigned_grade and res.grade != assigned_grade:
                 res.grade = assigned_grade
                 updated_count += 1
-                
+
         await session.commit()
-        return {"message": f"Successfully generated/updated grades for {updated_count} results"}
+        return {
+            "message": (
+                f"Done. Created {created_count} missing result rows, "
+                f"updated grades for {updated_count} results."
+            )
+        }
+
 
     @staticmethod
     async def get_exam_assigned_subjects(exam_id: uuid.UUID, session: AsyncSession) -> list[uuid.UUID]:
