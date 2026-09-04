@@ -1,7 +1,10 @@
 import uuid
-from sqlalchemy import String, ForeignKey, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.db.base import Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin
+
+from sqlalchemy import Boolean, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
+
 
 class Permission(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "permissions"

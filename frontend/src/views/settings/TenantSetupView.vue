@@ -10,14 +10,16 @@ const activeTab = ref('branches');
 
 const institutes = ref<any[]>([]);
 const branches = ref<any[]>([]);
+const users = ref<any[]>([]);
 const loading = ref(true);
 
 const load = async () => {
   loading.value = true;
   try {
-    [institutes.value, branches.value] = await Promise.all([
+    [institutes.value, branches.value, users.value] = await Promise.all([
       TenantService.getInstitutes(),
       TenantService.getBranches(),
+      TenantService.getUsers(),
     ]);
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Load failed', life: 3000 });
@@ -31,6 +33,7 @@ onMounted(load);
 const tabs = [
   { id: 'institutes', label: 'Institutes (Super Admin)', icon: 'pi pi-globe' },
   { id: 'branches', label: 'Branches', icon: 'pi pi-sitemap' },
+  { id: 'users', label: 'Users', icon: 'pi pi-users' },
 ];
 
 const instituteCols = [
@@ -43,8 +46,34 @@ const instituteCols = [
 ];
 
 const branchCols = [
-  { field: 'name', header: 'Branch Name' },
+  { field: 'name', header: 'Branch Name', required: true },
   { field: 'address', header: 'Address' },
+];
+
+const userCols = [
+  { field: 'full_name', header: 'Full Name', required: true },
+  { field: 'email', header: 'Email', required: true },
+  { 
+    field: 'user_type', 
+    header: 'Role / Type', 
+    type: 'select' as const, 
+    options: [
+      { label: 'Branch Admin', value: 'branch_admin' },
+      { label: 'Teacher', value: 'teacher' },
+      { label: 'Staff', value: 'staff' },
+      { label: 'Student', value: 'student' }
+    ],
+    required: true
+  },
+  { 
+    field: 'branch_id', 
+    header: 'Branch', 
+    type: 'select' as const, 
+    options: () => branches.value.map(b => ({ label: b.name, value: b.id })), 
+    required: true 
+  },
+  { field: 'password', header: 'Password', type: 'password' as const, hideInTable: true, required: true },
+  { field: 'is_active', header: 'Active', type: 'boolean' as const, defaultValue: true }
 ];
 </script>
 
@@ -97,6 +126,19 @@ const branchCols = [
           :createFn="TenantService.createBranch"
           :updateFn="TenantService.updateBranch"
           :deleteFn="TenantService.deleteBranch"
+          @refresh="load" 
+        />
+      </div>
+
+      <div v-if="activeTab === 'users'">
+        <CrudTable 
+          title="Users" 
+          :rows="users" 
+          :columns="userCols" 
+          :loading="loading"
+          :createFn="TenantService.createUser"
+          :updateFn="TenantService.updateUser"
+          :deleteFn="TenantService.deleteUser"
           @refresh="load" 
         />
       </div>

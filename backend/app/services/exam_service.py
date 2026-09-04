@@ -1,9 +1,12 @@
 import uuid
+
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
-from app.models.exam import Exam, ExamSchedule, ExamResult, GradingScale
+
 from app.models.academic import YearlyClassSubject
+from app.models.exam import Exam, ExamResult, ExamSchedule, GradingScale
+
 
 class ExamService:
     @staticmethod
@@ -59,7 +62,7 @@ class ExamService:
         ).distinct()
         
         result = await session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     @staticmethod
     async def get_exam_merit_list(
@@ -68,7 +71,12 @@ class ExamService:
         academic_year_id: uuid.UUID | None = None,
         class_id: uuid.UUID | None = None
     ) -> list[dict]:
-        from app.models.academic import AcademicClass, AcademicYear, YearlyClassSubject, Subject
+        from app.models.academic import (
+            AcademicClass,
+            AcademicYear,
+            Subject,
+            YearlyClassSubject,
+        )
         from app.models.exam import GradingScale
         from app.models.student import Enrollment, Student
         
@@ -177,7 +185,7 @@ class ExamService:
                 elif row.grade in failing_grades or row.grade in ("F", "Fail", fail_grade_name):
                     merit_map[key]["has_failed"] = True
 
-        grouped_by_exam_class = {}
+        grouped_by_exam_class: dict[tuple[uuid.UUID, uuid.UUID], list[dict]] = {}
         for item in merit_map.values():
             item["average_marks"] = item["total_marks"] / item["total_subjects"] if item["total_subjects"] > 0 else 0.0
             item["percentage"] = (item["total_marks"] / item["total_full_marks"]) * 100 if item["total_full_marks"] > 0 else 0.0
@@ -222,9 +230,7 @@ class ExamService:
                 if s["has_failed"]:
                     s["rank"] = 0
                 else:
-                    if prev_total is None:
-                        s["rank"] = current_rank
-                    elif abs(s["total_marks"] - prev_total) < 1e-6:
+                    if prev_total is None or abs(s["total_marks"] - prev_total) < 1e-6:
                         s["rank"] = current_rank
                     else:
                         current_rank = rank

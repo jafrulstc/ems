@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ConfigDict
-from datetime import date, time
 import uuid
+from datetime import date, time
+
+from pydantic import BaseModel, ConfigDict
+
 
 class DepartmentBase(BaseModel):
     name: str

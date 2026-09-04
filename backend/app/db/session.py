@@ -1,9 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import event
-from sqlalchemy.orm import with_loader_criteria, Session
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, with_loader_criteria
+
 from app.core.config import settings
-from app.db.base import Base, SoftDeleteMixin, TenantMixin
 from app.core.context import tenant_context, user_context
+from app.db.base import Base, SoftDeleteMixin, TenantMixin
 
 engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

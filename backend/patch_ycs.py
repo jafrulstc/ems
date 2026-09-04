@@ -1,9 +1,11 @@
 import asyncio
+
 from sqlalchemy import select
-from app.db.session import engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from app.db.session import engine
+from app.models.academic import AcademicClass, AcademicYear, Subject, YearlyClassSubject
 from app.models.tenant import Institute
-from app.models.academic import AcademicYear, AcademicClass, Subject, YearlyClassSubject
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 

@@ -4,14 +4,13 @@ auth_service.py
 Business logic for authentication and user management.
 """
 
-import uuid
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 
+from app.core.security import create_access_token, get_password_hash, verify_password
 from app.models.auth import User
 from app.models.tenant import Institute
-from app.core.security import verify_password, get_password_hash, create_access_token
 
 
 class AuthService:

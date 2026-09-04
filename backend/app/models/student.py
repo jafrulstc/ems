@@ -1,7 +1,10 @@
 import uuid
-from sqlalchemy import String, ForeignKey, Date, Integer, UniqueConstraint
+
+from sqlalchemy import Date, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db.base import Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin
+
+from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
+
 
 class Guardian(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "guardians"

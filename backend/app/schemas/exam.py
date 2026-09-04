@@ -1,7 +1,9 @@
-from pydantic import BaseModel, ConfigDict
+import uuid
 from datetime import date, time
 from typing import Literal
-import uuid
+
+from pydantic import BaseModel, ConfigDict
+
 
 class ExamTypeBase(BaseModel):
     name: str

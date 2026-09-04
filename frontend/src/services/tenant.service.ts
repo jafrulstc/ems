@@ -10,4 +10,9 @@ export const TenantService = {
   createBranch: (data: any) => api.post('/branches', data).then(res => res.data),
   updateBranch: (id: string, data: any) => api.put(`/branches/${id}`, data).then(r => r.data),
   deleteBranch: (id: string) => api.delete(`/branches/${id}`).then(r => r.data),
+
+  getUsers: () => api.get('/auth/users').then(res => res.data),
+  createUser: (data: any) => api.post('/auth/register', data).then(res => res.data),
+  updateUser: (id: string, data: any) => api.put(`/auth/users/${id}`, data).then(r => r.data),
+  deleteUser: (id: string) => api.delete(`/auth/users/${id}`).then(r => r.data),
 };

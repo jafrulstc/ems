@@ -5,17 +5,17 @@ Revises: 2c73862d10ff
 Create Date: 2026-08-30 15:27:05.697201
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '776f7cf8e1e7'
-down_revision: Union[str, Sequence[str], None] = '2c73862d10ff'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '2c73862d10ff'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

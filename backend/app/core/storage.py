@@ -2,22 +2,22 @@ import asyncio
 import os
 import uuid
 from abc import ABC, abstractmethod
-from fastapi import UploadFile
-from app.core.config import settings
 
 import boto3
 from botocore.exceptions import ClientError
+from fastapi import UploadFile
+
+from app.core.config import settings
+
 
 class BaseStorage(ABC):
     @abstractmethod
     async def upload_file(self, file: UploadFile, directory: str) -> str:
         """Uploads a file and returns its public URL or relative path."""
-        pass
 
     @abstractmethod
     async def delete_file(self, file_path: str) -> None:
         """Deletes a file given its relative path or public_id."""
-        pass
 
 class S3CompatibleStorage(BaseStorage):
     def __init__(self):

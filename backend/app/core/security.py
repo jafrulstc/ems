@@ -1,7 +1,9 @@
-import argon2
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
+
+import argon2
 from jose import jwt
+
 from app.core.config import settings
 
 ph = argon2.PasswordHasher()
@@ -17,9 +19,9 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(subject: str | Any, tenant_id: str | Any, branch_id: str | Any | None = None, expires_delta: timedelta | None = None) -> str:
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode = {"exp": expire, "sub": str(subject), "tenant_id": str(tenant_id)}
     if branch_id:

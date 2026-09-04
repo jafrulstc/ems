@@ -1,16 +1,26 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
 import uuid
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     user_type: str
-    branch_id: Optional[uuid.UUID] = None
-    role_id: Optional[uuid.UUID] = None
+    branch_id: uuid.UUID | None = None
+    role_id: uuid.UUID | None = None
 
 class UserCreate(UserBase):
     password: str
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    full_name: str | None = None
+    user_type: str | None = None
+    branch_id: uuid.UUID | None = None
+    role_id: uuid.UUID | None = None
+    password: str | None = None
+    is_active: bool | None = None
 
 class UserRead(UserBase):
     id: uuid.UUID

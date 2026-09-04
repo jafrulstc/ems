@@ -2,14 +2,21 @@ import asyncio
 import datetime
 import random
 import string
-from sqlalchemy import select, delete
-from app.db.session import engine
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.models.tenant import Institute, Branch
-from app.models.academic import AcademicYear, Department, AcademicClass, Section, Subject
-from app.models.student import Student, Guardian, Enrollment
-from app.models.exam import Exam, ExamSchedule, ExamResult, GradingScale
+from app.db.session import engine
+from app.models.academic import (
+    AcademicClass,
+    AcademicYear,
+    Department,
+    Section,
+    Subject,
+)
+from app.models.exam import Exam, ExamResult, ExamSchedule, GradingScale
+from app.models.student import Enrollment, Guardian, Student
+from app.models.tenant import Branch, Institute
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 

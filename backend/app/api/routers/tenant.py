@@ -1,13 +1,19 @@
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.api.deps import SessionDep, require_permission, TenantDep
-from app.models.tenant import Institute, Branch
-from app.models.auth import User
+from app.api.deps import SessionDep, TenantDep, require_permission
 from app.core.security import get_password_hash
-from app.schemas.tenant import InstituteCreate, InstituteRead, InstituteUpdate, BranchCreate, BranchRead
+from app.models.auth import User
+from app.models.tenant import Branch, Institute
+from app.schemas.tenant import (
+    BranchCreate,
+    BranchRead,
+    InstituteCreate,
+    InstituteRead,
+    InstituteUpdate,
+)
 
 router = APIRouter()
 

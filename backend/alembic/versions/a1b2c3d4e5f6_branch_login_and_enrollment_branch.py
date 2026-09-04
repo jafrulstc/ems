@@ -5,9 +5,9 @@ Revision ID: a1b2c3d4e5f6
 Revises: 1e3aca4a4b49, 81588816130f  (merges both existing heads)
 Create Date: 2026-09-03
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision = 'a1b2c3d4e5f6'
 down_revision = ('1e3aca4a4b49', '81588816130f')   # merges both existing heads

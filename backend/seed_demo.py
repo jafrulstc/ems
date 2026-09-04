@@ -1,14 +1,23 @@
 import asyncio
 import datetime
+
 from sqlalchemy import select
-from app.db.session import engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from app.db.session import engine
+from app.models.academic import (
+    AcademicClass,
+    AcademicYear,
+    Department,
+    Section,
+    Subject,
+    YearlyClassSubject,
+)
+from app.models.exam import Exam, ExamResult, ExamSchedule, GradingScale
+from app.models.student import Enrollment, Guardian, Student
+
 # Import all models
-from app.models.tenant import Institute, Branch
-from app.models.academic import AcademicYear, Department, AcademicClass, Section, Subject, YearlyClassSubject
-from app.models.student import Student, Guardian, Enrollment
-from app.models.exam import Exam, ExamSchedule, ExamResult, GradingScale
+from app.models.tenant import Branch, Institute
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 

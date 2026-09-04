@@ -1,12 +1,14 @@
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy import select, text
-from app.core.config import settings
-from app.models.auth import User
-from app.models.tenant import Institute, Branch
-from app.models.academic import AcademicYear, AcademicClass, Section, Subject
-from app.core.security import get_password_hash
 from datetime import date
+
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from app.core.config import settings
+from app.core.security import get_password_hash
+from app.models.academic import AcademicClass, AcademicYear, Section
+from app.models.auth import User
+from app.models.tenant import Branch, Institute
 
 engine = create_async_engine(settings.DATABASE_URL)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)

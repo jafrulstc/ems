@@ -1,12 +1,20 @@
-from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy import select
 import uuid
+from typing import Any
 
-from app.api.deps import SessionDep, require_permission, TenantDep
-from app.models.student import Guardian, Student, Enrollment
-from app.schemas.student import GuardianCreate, GuardianRead, StudentCreate, StudentRead, EnrollmentCreate, EnrollmentRead
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy import select
+
+from app.api.deps import SessionDep, TenantDep, require_permission
 from app.core.storage import get_storage
+from app.models.student import Enrollment, Guardian, Student
+from app.schemas.student import (
+    EnrollmentCreate,
+    EnrollmentRead,
+    GuardianCreate,
+    GuardianRead,
+    StudentCreate,
+    StudentRead,
+)
 
 router = APIRouter()
 

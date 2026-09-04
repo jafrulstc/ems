@@ -1,16 +1,18 @@
 import uuid
-from typing import Annotated, Any
-from fastapi import Depends, HTTPException, status, Request
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
+from jose import JWTError, jwt
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
+from app.core.context import branch_context, tenant_context, user_context
 from app.db.session import get_db
 from app.models.auth import User
 from app.models.tenant import Institute
 from app.schemas.auth import TokenPayload
-from app.core.context import tenant_context, user_context, branch_context
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
@@ -68,7 +70,7 @@ def require_permission(perm_name: str):
             return current_user
             
         if current_user.role_id:
-            from app.models.auth import RolePermission, Permission
+            from app.models.auth import Permission, RolePermission
             stmt = (
                 select(Permission.name)
                 .join(RolePermission, RolePermission.permission_id == Permission.id)

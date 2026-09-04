@@ -1,6 +1,8 @@
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db.base import Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMixin
+
+from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
+
 
 class Institute(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "institutes"

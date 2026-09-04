@@ -1,17 +1,26 @@
+import uuid
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import select
 
-from app.api.deps import SessionDep, require_permission, TenantDep
-from app.models.exam import Exam, ExamSchedule, ExamResult, GradingScale, ExamType
+from app.api.deps import SessionDep, TenantDep, require_permission
+from app.models.exam import Exam, ExamResult, ExamSchedule, ExamType, GradingScale
 from app.schemas.exam import (
-    ExamCreate, ExamRead, ExamScheduleCreate, ExamScheduleRead, 
-    ExamResultCreate, ExamResultRead, GradingScaleCreate, GradingScaleRead,
-    ExamTypeCreate, ExamTypeRead
+    ExamCreate,
+    ExamRead,
+    ExamResultCreate,
+    ExamResultRead,
+    ExamScheduleCreate,
+    ExamScheduleRead,
+    ExamTypeCreate,
+    ExamTypeRead,
+    GradingScaleCreate,
+    GradingScaleRead,
 )
-from pydantic import BaseModel
-import uuid
 from app.services.exam_service import ExamService
+
 
 class ResultGenerateRequest(BaseModel):
     exam_id: uuid.UUID

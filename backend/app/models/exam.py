@@ -1,7 +1,10 @@
 import uuid
-from sqlalchemy import String, ForeignKey, Date, Float, Time, Boolean
+
+from sqlalchemy import Boolean, Date, Float, ForeignKey, String, Time
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db.base import Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin
+
+from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
+
 
 class ExamType(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "exam_types"

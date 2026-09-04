@@ -1,7 +1,9 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Boolean, DateTime, func
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 
 class Base(DeclarativeBase):
     pass

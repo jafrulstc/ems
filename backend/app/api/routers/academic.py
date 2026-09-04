@@ -1,13 +1,33 @@
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-from app.api.deps import SessionDep, require_permission, TenantDep
-from app.models.academic import AcademicClass, Section, Subject, AcademicYear, Department, Shift, YearlyClassSubject
+from app.api.deps import SessionDep, TenantDep, require_permission
+from app.models.academic import (
+    AcademicClass,
+    AcademicYear,
+    Department,
+    Section,
+    Shift,
+    Subject,
+    YearlyClassSubject,
+)
 from app.schemas.academic import (
-    ClassCreate, ClassRead, SectionCreate, SectionRead, SubjectCreate, SubjectRead,
-    AcademicYearCreate, AcademicYearRead, DepartmentCreate, DepartmentRead,
-    ShiftCreate, ShiftRead, YearlyClassSubjectCreate, YearlyClassSubjectRead
+    AcademicYearCreate,
+    AcademicYearRead,
+    ClassCreate,
+    ClassRead,
+    DepartmentCreate,
+    DepartmentRead,
+    SectionCreate,
+    SectionRead,
+    ShiftCreate,
+    ShiftRead,
+    SubjectCreate,
+    SubjectRead,
+    YearlyClassSubjectCreate,
+    YearlyClassSubjectRead,
 )
 
 router = APIRouter()

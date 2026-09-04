@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Literal, Any
-from pydantic import field_validator
 import json
+from typing import Any, Literal
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Education Management System"
