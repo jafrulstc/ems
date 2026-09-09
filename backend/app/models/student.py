@@ -34,7 +34,11 @@ class Student(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
 
 class Enrollment(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "enrollments"
-    __table_args__ = {"schema": "student"}
+    __table_args__ = (
+        # A student can only be enrolled once per academic year per tenant
+        UniqueConstraint("student_id", "academic_year_id", "tenant_id", name="uq_enrollment_student_academic_year"),
+        {"schema": "student"},
+    )
     roll_number: Mapped[str | None] = mapped_column(String, nullable=True)
     enrollment_date: Mapped[Date] = mapped_column(Date)
     

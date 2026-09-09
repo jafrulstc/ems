@@ -1,0 +1,7 @@
+D:\Others\project\ems\backend>uv run alembic upgrade head
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade fc096be78a45 -> 2acc62f85050, add_unique_constraint_enrollment_student_academic_year
+
+D:\Others\project\ems\backend>
+

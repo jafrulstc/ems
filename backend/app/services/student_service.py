@@ -116,6 +116,23 @@ class StudentService:
 
     @staticmethod
     async def create_enrollment(data: EnrollmentCreate, tenant_id: uuid.UUID, session: AsyncSession) -> Enrollment:
+        # Guard: a student may only be enrolled once per academic year per tenant
+        existing = (
+            await session.execute(
+                select(Enrollment).where(
+                    Enrollment.student_id == data.student_id,
+                    Enrollment.academic_year_id == data.academic_year_id,
+                    Enrollment.tenant_id == tenant_id,
+                    Enrollment.is_deleted == False,  # noqa: E712
+                )
+            )
+        ).scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail="This student is already enrolled in the selected academic year.",
+            )
+
         db = Enrollment(**data.model_dump(), tenant_id=tenant_id)
         session.add(db)
         await session.commit()
