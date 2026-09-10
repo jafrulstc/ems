@@ -36,6 +36,12 @@ const selectedClassId = ref<string | null>(null);
 const selectedScheduleId = ref<string | null>(null);
 const filteredResults = ref<any[]>([]);
 
+const scheduleFilterClassId = ref<string | null>(null);
+const filteredSchedules = computed(() => {
+  if (!scheduleFilterClassId.value) return schedules.value;
+  return schedules.value.filter(s => s.class_id === scheduleFilterClassId.value);
+});
+
 const load = async () => {
   loading.value = true;
   try {
@@ -365,9 +371,18 @@ const generateResult = async () => {
       </div>
 
       <div v-if="activeTab === 'schedules'">
+        <div class="filter-card" style="margin-bottom: 1.5rem; padding: 1rem;">
+          <div class="filter-group" style="max-width: 300px;">
+            <label>Filter by Class</label>
+            <select v-model="scheduleFilterClassId" class="custom-select">
+              <option :value="null">-- All Classes --</option>
+              <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+        </div>
         <CrudTable 
           title="Exam Schedules" 
-          :rows="schedules" 
+          :rows="filteredSchedules" 
           :columns="scheduleCols" 
           :loading="loading"
           :createFn="ExamService.createSchedule"
