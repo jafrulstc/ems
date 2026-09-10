@@ -32,7 +32,7 @@ async def create_guardian(session: SessionDep, tenant: TenantDep, guardian_in: G
     return await StudentService.create_guardian(guardian_in, tenant.id, session)
 
 @router.get("/guardians", response_model=list[GuardianRead], dependencies=[Depends(require_permission("guardian:read"))])
-async def read_guardians(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
+async def read_guardians(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 10000) -> Any:
     return await StudentService.get_guardians(session, skip, limit)
 
 @router.put("/guardians/{guardian_id}", response_model=GuardianRead, dependencies=[Depends(require_permission("guardian:update"))])
@@ -55,7 +55,7 @@ async def get_next_student_id(session: SessionDep, tenant: TenantDep) -> Any:
     return {"next_student_id_no": next_id}
 
 @router.get("/students", response_model=list[StudentRead], dependencies=[Depends(require_permission("student:read"))])
-async def read_students(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
+async def read_students(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 10000) -> Any:
     return await StudentService.get_students(session, skip, limit)
 
 @router.put("/students/{student_id}", response_model=StudentRead, dependencies=[Depends(require_permission("student:update"))])
@@ -85,7 +85,7 @@ async def create_enrollment(session: SessionDep, tenant: TenantDep, enrollment_i
     return await StudentService.create_enrollment(enrollment_in, tenant.id, session)
 
 @router.get("/enrollments", response_model=list[EnrollmentRead], dependencies=[Depends(require_permission("enrollment:read"))])
-async def read_enrollments(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
+async def read_enrollments(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 10000) -> Any:
     return await StudentService.get_enrollments(session, skip, limit)
 
 @router.put("/enrollments/{enrollment_id}", response_model=EnrollmentRead, dependencies=[Depends(require_permission("enrollment:update"))])

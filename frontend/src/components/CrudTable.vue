@@ -121,7 +121,7 @@ function confirmDelete(row: any) {
       <Button :label="`Add ${title.slice(0,-1)}`" icon="pi pi-plus" size="small" @click="openCreate" />
     </div>
 
-    <DataTable :value="rows" :loading="loading" scrollable stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)">
+    <DataTable :value="rows" :loading="loading" scrollable stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)" paginator :rows="10" :rowsPerPageOptions="[10, 20, 50, 100]">
       <Column v-for="col in columns.filter(c => !c.hideInTable)" :key="col.field" :field="col.displayField || col.field" :header="col.header" sortable>
         <template #body="{ data }">
           <span v-if="col.type === 'boolean'">
