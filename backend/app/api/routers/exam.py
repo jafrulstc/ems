@@ -76,6 +76,7 @@ async def delete_exam(exam_id: str, session: SessionDep, tenant: TenantDep) -> A
 # ── Exam Schedule ─────────────────────────────────────────
 @router.post("/schedules", response_model=ExamScheduleRead, dependencies=[Depends(require_permission("exam_schedule:create"))])
 async def create_exam_schedule(session: SessionDep, tenant: TenantDep, schedule_in: ExamScheduleCreate) -> Any:
+    await ExamService.validate_class_subject(schedule_in.class_id, schedule_in.subject_id, schedule_in.exam_id, session)
     db = ExamSchedule(**schedule_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
@@ -87,6 +88,7 @@ async def read_exam_schedules(session: SessionDep, tenant: TenantDep, skip: int 
 async def update_exam_schedule(schedule_id: str, session: SessionDep, tenant: TenantDep, schedule_in: ExamScheduleCreate) -> Any:
     db = (await session.execute(select(ExamSchedule).where(ExamSchedule.id == schedule_id))).scalar_one_or_none()
     if not db: raise HTTPException(status_code=404, detail="Not found")
+    await ExamService.validate_class_subject(schedule_in.class_id, schedule_in.subject_id, schedule_in.exam_id, session)
     for k, v in schedule_in.model_dump().items(): setattr(db, k, v)
     await session.commit(); await session.refresh(db); return db
 

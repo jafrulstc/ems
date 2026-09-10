@@ -91,28 +91,18 @@ const subjectOptions = computed(() => subjects.value.map(s => ({ label: `${s.nam
 const academicYearOptions = computed(() => academicYears.value.map(y => ({ label: y.name, value: y.id })));
 const classOptions = computed(() => classes.value.map(c => ({ label: c.name, value: c.id })));
 
-const examSubjectsCache = ref<Record<string, string[]>>({});
-
-const fetchExamSubjects = async (exam_id: string) => {
-  if (examSubjectsCache.value[exam_id]) return;
-  try {
-    const ids = await ExamService.getExamSubjects(exam_id);
-    examSubjectsCache.value = { ...examSubjectsCache.value, [exam_id]: ids };
-  } catch (e) {
-    examSubjectsCache.value = { ...examSubjectsCache.value, [exam_id]: [] };
-  }
-};
-
 const dynamicSubjectOptions = (form: any) => {
-  if (!form.exam_id) return subjectOptions.value;
+  if (!form.exam_id || !form.class_id) return subjectOptions.value;
   
-  if (!examSubjectsCache.value[form.exam_id]) {
-    fetchExamSubjects(form.exam_id);
-    return subjectOptions.value; 
-  }
+  const exam = exams.value.find(e => e.id === form.exam_id);
+  if (!exam) return subjectOptions.value;
+
+  const validYcs = yearlyClassSubjects.value.filter(ycs => 
+    ycs.academic_year_id === exam.academic_year_id && ycs.class_id === form.class_id
+  );
   
-  const validIds = new Set(examSubjectsCache.value[form.exam_id]);
-  return subjectOptions.value.filter(opt => validIds.has(opt.value));
+  const validSubjectIds = new Set(validYcs.map(ycs => ycs.subject_id));
+  return subjectOptions.value.filter(opt => validSubjectIds.has(opt.value));
 };
 
 const examCols = computed(() => [
@@ -158,10 +148,39 @@ const getStudentInfo = (enrollmentId: string) => {
   if (enrollment) {
     const student = students.value.find(s => s.id === enrollment.student_id);
     const studentName = student ? student.full_name : 'Student';
-    const rollNo = enrollment.roll_number || enrollment.enrollment_number;
-    return `${studentName} (Roll: ${rollNo})`;
+    const studentId = student && student.student_id_no ? student.student_id_no : 'N/A';
+    const rollNo = enrollment.roll_number != null ? enrollment.roll_number : 'N/A';
+    return `${studentName} (ID: ${studentId}, Roll: ${rollNo})`;
   }
   return `Enrollment #${enrollmentId.substring(0, 8)}`;
+};
+
+const focusNext = (event: Event) => {
+  const inputs = Array.from(document.querySelectorAll('.marks-table .p-inputnumber-input')) as HTMLInputElement[];
+  const target = event.target as HTMLInputElement;
+  const currentIndex = inputs.indexOf(target);
+  if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+    inputs[currentIndex + 1].focus();
+    inputs[currentIndex + 1].select();
+  }
+};
+
+const getDynamicGrade = (result: any) => {
+  if (result.status !== 'PRESENT') return result.status;
+  
+  const schedule = schedules.value.find(s => s.id === result.exam_schedule_id);
+  if (!schedule || !schedule.full_marks) return result.grade || 'N/A';
+
+  const marks = result.obtained_marks || 0;
+  const percentage = (marks / schedule.full_marks) * 100;
+  
+  const scales = [...gradingScales.value].sort((a, b) => b.min_marks - a.min_marks);
+  for (const scale of scales) {
+    if (percentage >= scale.min_marks && percentage <= scale.max_marks) {
+      return scale.grade_name;
+    }
+  }
+  return 'N/A';
 };
 
 const loadMarks = () => {
@@ -201,6 +220,23 @@ const loadMarks = () => {
       status: 'PRESENT',
       isNew: true
     };
+  });
+
+  mapped.sort((a, b) => {
+    const enrA = validEnrollments.find(e => e.id === a.enrollment_id);
+    const enrB = validEnrollments.find(e => e.id === b.enrollment_id);
+    
+    const studentA = students.value.find(s => s.id === enrA?.student_id);
+    const studentB = students.value.find(s => s.id === enrB?.student_id);
+
+    const idA = studentA?.student_id_no || Number.MAX_SAFE_INTEGER;
+    const idB = studentB?.student_id_no || Number.MAX_SAFE_INTEGER;
+
+    if (idA !== idB) return idA - idB;
+
+    const rollA = enrA?.roll_number ? String(enrA.roll_number) : 'ZZZ';
+    const rollB = enrB?.roll_number ? String(enrB.roll_number) : 'ZZZ';
+    return rollA.localeCompare(rollB, undefined, { numeric: true });
   });
 
   filteredResults.value = mapped;
@@ -375,10 +411,18 @@ const generateResult = async () => {
             <tbody>
               <tr v-for="result in filteredResults" :key="result.id">
                 <td>{{ getStudentInfo(result.enrollment_id) }}</td>
-                <td>
-                  <InputNumber v-model="result.obtained_marks" :minFractionDigits="0" :maxFractionDigits="2" :min="0" style="width: 120px;" :disabled="result.status !== 'PRESENT'" />
+                <td style="padding-right: 2rem;">
+                  <InputNumber 
+                    v-model="result.obtained_marks" 
+                    :minFractionDigits="0" 
+                    :maxFractionDigits="2" 
+                    :min="0" 
+                    style="width: 120px;" 
+                    :disabled="result.status !== 'PRESENT'" 
+                    @keydown.enter.prevent="focusNext"
+                  />
                 </td>
-                <td>
+                <td style="padding-right: 2rem;">
                   <select v-model="result.status" class="custom-select" style="width: 120px;">
                     <option value="PRESENT">Present</option>
                     <option value="ABSENT">Absent</option>
@@ -386,7 +430,7 @@ const generateResult = async () => {
                     <option value="EXPELLED">Expelled</option>
                   </select>
                 </td>
-                <td><strong>{{ result.grade || 'N/A' }}</strong></td>
+                <td><strong>{{ getDynamicGrade(result) }}</strong></td>
               </tr>
             </tbody>
           </table>

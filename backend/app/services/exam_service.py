@@ -109,6 +109,31 @@ class ExamService:
 
 
     @staticmethod
+    async def validate_class_subject(
+        class_id: uuid.UUID,
+        subject_id: uuid.UUID,
+        exam_id: uuid.UUID,
+        session: AsyncSession
+    ) -> None:
+        from app.models.academic import YearlyClassSubject
+
+        exam = await session.get(Exam, exam_id)
+        if not exam:
+            raise HTTPException(status_code=404, detail="Exam not found")
+
+        stmt = select(YearlyClassSubject).where(
+            YearlyClassSubject.class_id == class_id,
+            YearlyClassSubject.subject_id == subject_id,
+            YearlyClassSubject.academic_year_id == exam.academic_year_id,
+        )
+        result = await session.execute(stmt)
+        if not result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=400,
+                detail="This subject is not assigned to this class for the exam's academic year."
+            )
+
+    @staticmethod
     async def get_exam_assigned_subjects(exam_id: uuid.UUID, session: AsyncSession) -> list[uuid.UUID]:
         exam = await session.get(Exam, exam_id)
         if not exam:
