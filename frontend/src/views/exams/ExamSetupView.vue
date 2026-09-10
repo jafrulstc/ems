@@ -160,8 +160,8 @@ const focusNext = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const currentIndex = inputs.indexOf(target);
   if (currentIndex > -1 && currentIndex < inputs.length - 1) {
-    inputs[currentIndex + 1].focus();
-    inputs[currentIndex + 1].select();
+    inputs[currentIndex + 1]?.focus();
+    inputs[currentIndex + 1]?.select();
   }
 };
 
