@@ -31,15 +31,33 @@ const classes = ref<any[]>([]);
 const loading = ref(true);
 const markEntryLoading = ref(false);
 
+const selectedYearId = ref<string | null>(null);
 const selectedExamId = ref<string | null>(null);
 const selectedClassId = ref<string | null>(null);
 const selectedScheduleId = ref<string | null>(null);
 const filteredResults = ref<any[]>([]);
 
+const examFilterYearId = ref<string | null>(null);
+const filteredExams = computed(() => {
+  if (!examFilterYearId.value) return exams.value;
+  return exams.value.filter(e => e.academic_year_id === examFilterYearId.value);
+});
+
+const scheduleFilterYearId = ref<string | null>(null);
 const scheduleFilterClassId = ref<string | null>(null);
 const filteredSchedules = computed(() => {
-  if (!scheduleFilterClassId.value) return schedules.value;
-  return schedules.value.filter(s => s.class_id === scheduleFilterClassId.value);
+  return schedules.value.filter(s => {
+    if (scheduleFilterClassId.value && s.class_id !== scheduleFilterClassId.value) {
+      return false;
+    }
+    if (scheduleFilterYearId.value) {
+      const exam = exams.value.find(e => e.id === s.exam_id);
+      if (!exam || exam.academic_year_id !== scheduleFilterYearId.value) {
+        return false;
+      }
+    }
+    return true;
+  });
 });
 
 const load = async () => {
@@ -245,19 +263,31 @@ const loadMarks = () => {
   markEntryLoading.value = false;
 };
 
+const availableExamsForYear = computed(() => {
+  if (!selectedYearId.value) return exams.value;
+  return exams.value.filter(e => e.academic_year_id === selectedYearId.value);
+});
+
 const availableClassesForExam = computed(() => {
   if (!selectedExamId.value) return [];
   const scheduleClassIds = new Set(schedules.value.filter(s => s.exam_id === selectedExamId.value).map(s => s.class_id));
   return classes.value.filter(c => scheduleClassIds.has(c.id));
 });
 
-const onClassChange = () => {
+const onYearChange = () => {
+  selectedExamId.value = null;
+  selectedClassId.value = null;
   selectedScheduleId.value = null;
   filteredResults.value = [];
 };
 
 const onExamChange = () => {
   selectedClassId.value = null;
+  selectedScheduleId.value = null;
+  filteredResults.value = [];
+};
+
+const onClassChange = () => {
   selectedScheduleId.value = null;
   filteredResults.value = [];
 };
@@ -332,9 +362,18 @@ const generateResult = async () => {
     <!-- Tab Content Panels -->
     <div class="tab-content">
       <div v-if="activeTab === 'exams'">
+        <div class="filter-card" style="margin-bottom: 1.5rem; padding: 1rem;">
+          <div class="filter-group" style="max-width: 300px;">
+            <label>Filter by Academic Year</label>
+            <select v-model="examFilterYearId" class="custom-select">
+              <option :value="null">-- All Academic Years --</option>
+              <option v-for="y in academicYears" :key="y.id" :value="y.id">{{ y.name }}</option>
+            </select>
+          </div>
+        </div>
         <CrudTable 
           title="Exams" 
-          :rows="exams" 
+          :rows="filteredExams" 
           :columns="examCols" 
           :loading="loading"
           :createFn="ExamService.createExam"
@@ -371,7 +410,14 @@ const generateResult = async () => {
       </div>
 
       <div v-if="activeTab === 'schedules'">
-        <div class="filter-card" style="margin-bottom: 1.5rem; padding: 1rem;">
+        <div class="filter-card" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <div class="filter-group" style="max-width: 300px;">
+            <label>Filter by Academic Year</label>
+            <select v-model="scheduleFilterYearId" class="custom-select">
+              <option :value="null">-- All Academic Years --</option>
+              <option v-for="y in academicYears" :key="y.id" :value="y.id">{{ y.name }}</option>
+            </select>
+          </div>
           <div class="filter-group" style="max-width: 300px;">
             <label>Filter by Class</label>
             <select v-model="scheduleFilterClassId" class="custom-select">
@@ -393,15 +439,23 @@ const generateResult = async () => {
       </div>
 
       <div v-if="activeTab === 'mark-entry'" class="mark-entry-panel">
-        <div class="filter-card">
+        <div class="filter-card" style="flex-wrap: wrap;">
+          <div class="filter-group">
+            <label>Select Academic Year</label>
+            <select v-model="selectedYearId" class="custom-select" @change="onYearChange">
+              <option :value="null">-- Choose Academic Year --</option>
+              <option v-for="y in academicYears" :key="y.id" :value="y.id">{{ y.name }}</option>
+            </select>
+          </div>
+
           <div class="filter-group">
             <label>Select Exam</label>
             <div style="display: flex; gap: 1rem;">
-              <select v-model="selectedExamId" class="custom-select" @change="onExamChange" style="flex: 1;">
+              <select v-model="selectedExamId" class="custom-select" :disabled="!selectedYearId" @change="onExamChange" style="flex: 1;">
                 <option :value="null">-- Choose Exam --</option>
-                <option v-for="e in exams" :key="e.id" :value="e.id">{{ e.name }}</option>
+                <option v-for="e in availableExamsForYear" :key="e.id" :value="e.id">{{ e.name }}</option>
               </select>
-              <Button label="Generate Final Result" icon="pi pi-cog" severity="success" @click="generateResult" :disabled="!selectedExamId" :loading="markEntryLoading"/>
+              <Button label="Generate" icon="pi pi-cog" severity="success" @click="generateResult" :disabled="!selectedExamId" :loading="markEntryLoading"/>
             </div>
           </div>
           
@@ -430,41 +484,43 @@ const generateResult = async () => {
             <h3>Student Marks Entry</h3>
             <Button label="Save All Marks" icon="pi pi-save" @click="saveMarks" :loading="markEntryLoading" />
           </div>
-          <table class="marks-table">
-            <thead>
-              <tr>
-                <th>Student / Enrollment</th>
-                <th>Obtained Marks</th>
-                <th>Status</th>
-                <th>Calculated Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="result in filteredResults" :key="result.id">
-                <td>{{ getStudentInfo(result.enrollment_id) }}</td>
-                <td style="padding-right: 2rem;">
-                  <InputNumber 
-                    v-model="result.obtained_marks" 
-                    :minFractionDigits="0" 
-                    :maxFractionDigits="2" 
-                    :min="0" 
-                    style="width: 120px;" 
-                    :disabled="result.status !== 'PRESENT'" 
-                    @keydown.enter.prevent="focusNext"
-                  />
-                </td>
-                <td style="padding-right: 2rem;">
-                  <select v-model="result.status" class="custom-select" style="width: 120px;">
-                    <option value="PRESENT">Present</option>
-                    <option value="ABSENT">Absent</option>
-                    <option value="WITHHELD">Withheld</option>
-                    <option value="EXPELLED">Expelled</option>
-                  </select>
-                </td>
-                <td><strong>{{ getDynamicGrade(result) }}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+          <div style="overflow-x: auto;">
+            <table class="marks-table">
+              <thead>
+                <tr>
+                  <th style="white-space: nowrap;">Student / Enrollment</th>
+                  <th style="white-space: nowrap; text-align: center;">Obtained Marks</th>
+                  <th style="white-space: nowrap; text-align: center;">Status</th>
+                  <th style="white-space: nowrap; text-align: center;">Calculated Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="result in filteredResults" :key="result.id">
+                  <td style="white-space: nowrap;">{{ getStudentInfo(result.enrollment_id) }}</td>
+                  <td style="text-align: center;">
+                    <InputNumber 
+                      v-model="result.obtained_marks" 
+                      :minFractionDigits="0" 
+                      :maxFractionDigits="2" 
+                      :min="0" 
+                      :inputStyle="{ width: '90px', textAlign: 'center' }"
+                      :disabled="result.status !== 'PRESENT'" 
+                      @keydown.enter.prevent="focusNext"
+                    />
+                  </td>
+                  <td style="text-align: center;">
+                    <select v-model="result.status" class="custom-select" style="width: 110px;">
+                      <option value="PRESENT">Present</option>
+                      <option value="ABSENT">Absent</option>
+                      <option value="WITHHELD">Withheld</option>
+                      <option value="EXPELLED">Expelled</option>
+                    </select>
+                  </td>
+                  <td style="text-align: center;"><strong>{{ getDynamicGrade(result) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div v-else-if="selectedScheduleId && !markEntryLoading" class="empty-state">
@@ -554,12 +610,14 @@ const generateResult = async () => {
   gap: 1.5rem;
   align-items: flex-end;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  flex-wrap: wrap;
 }
 .filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  min-width: 200px;
 }
 .filter-group label {
   font-size: 0.9rem;
