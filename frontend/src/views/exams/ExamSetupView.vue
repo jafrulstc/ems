@@ -14,7 +14,7 @@ import ExamReportView from './ExamReportView.vue';
 import MarksheetView from './MarksheetView.vue';
 
 const toast = useToast();
-const activeTab = ref('exams');
+const activeTab = ref('types');
 
 const exams = ref<any[]>([]);
 const schedules = ref<any[]>([]);
@@ -32,6 +32,7 @@ const loading = ref(true);
 const markEntryLoading = ref(false);
 
 const selectedExamId = ref<string | null>(null);
+const selectedClassId = ref<string | null>(null);
 const selectedScheduleId = ref<string | null>(null);
 const filteredResults = ref<any[]>([]);
 
@@ -77,8 +78,8 @@ const load = async () => {
 onMounted(load);
 
 const tabs = [
-  { id: 'exams', label: 'Exams', icon: 'pi pi-file-edit' },
   { id: 'types', label: 'Exam Types', icon: 'pi pi-tags' },
+  { id: 'exams', label: 'Exams', icon: 'pi pi-file-edit' },
   { id: 'grading', label: 'Grading Scales', icon: 'pi pi-chart-bar' },
   { id: 'schedules', label: 'Exam Schedules', icon: 'pi pi-calendar-plus' },
   { id: 'mark-entry', label: 'Mark Entry', icon: 'pi pi-check-square' },
@@ -108,9 +109,9 @@ const dynamicSubjectOptions = (form: any) => {
 const examCols = computed(() => [
   { field: 'name', header: 'Exam Name', required: true },
   { field: 'academic_year_id', header: 'Academic Year', type: 'select' as const, options: academicYearOptions.value, required: true },
+  { field: 'exam_type_id', header: 'Exam Type', type: 'select' as const, options: examTypeOptions.value, required: true },
   { field: 'start_date', header: 'Start Date', type: 'date' as const, required: true },
   { field: 'end_date', header: 'End Date', type: 'date' as const, required: true },
-  { field: 'exam_type_id', header: 'Exam Type', type: 'select' as const, options: examTypeOptions.value, required: true },
 ]);
 
 const typeCols = [
@@ -199,13 +200,8 @@ const loadMarks = () => {
     return;
   }
 
-  const validYcs = yearlyClassSubjects.value.filter(ycs => 
-    ycs.academic_year_id === exam.academic_year_id && ycs.subject_id === schedule.subject_id
-  );
-  const validClassIds = validYcs.map(ycs => ycs.class_id);
-
   const validEnrollments = enrollments.value.filter(e => 
-    e.academic_year_id === exam.academic_year_id && validClassIds.includes(e.class_id)
+    e.academic_year_id === exam.academic_year_id && e.class_id === schedule.class_id
   );
 
   const mapped = validEnrollments.map(enr => {
@@ -243,7 +239,19 @@ const loadMarks = () => {
   markEntryLoading.value = false;
 };
 
+const availableClassesForExam = computed(() => {
+  if (!selectedExamId.value) return [];
+  const scheduleClassIds = new Set(schedules.value.filter(s => s.exam_id === selectedExamId.value).map(s => s.class_id));
+  return classes.value.filter(c => scheduleClassIds.has(c.id));
+});
+
+const onClassChange = () => {
+  selectedScheduleId.value = null;
+  filteredResults.value = [];
+};
+
 const onExamChange = () => {
+  selectedClassId.value = null;
   selectedScheduleId.value = null;
   filteredResults.value = [];
 };
@@ -383,10 +391,18 @@ const generateResult = async () => {
           </div>
           
           <div class="filter-group">
+            <label>Select Class</label>
+            <select v-model="selectedClassId" class="custom-select" :disabled="!selectedExamId" @change="onClassChange">
+              <option :value="null">-- Choose Class --</option>
+              <option v-for="c in availableClassesForExam" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
             <label>Select Subject / Schedule</label>
-            <select v-model="selectedScheduleId" class="custom-select" :disabled="!selectedExamId" @change="loadMarks">
+            <select v-model="selectedScheduleId" class="custom-select" :disabled="!selectedClassId" @change="loadMarks">
               <option :value="null">-- Choose Schedule --</option>
-              <option v-for="s in schedules.filter(sch => sch.exam_id === selectedExamId)" :key="s.id" :value="s.id">
+              <option v-for="s in schedules.filter(sch => sch.exam_id === selectedExamId && sch.class_id === selectedClassId)" :key="s.id" :value="s.id">
                 {{ getSubjectName(s.subject_id) }} | Date: {{ s.exam_date }}
               </option>
             </select>
