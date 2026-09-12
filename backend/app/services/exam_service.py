@@ -268,8 +268,9 @@ class ExamService:
 
         grouped_by_exam_class: dict[tuple[uuid.UUID, uuid.UUID], list[dict]] = {}
         for item in merit_map.values():
-            item["average_marks"] = item["total_marks"] / item["total_subjects"] if item["total_subjects"] > 0 else 0.0
-            item["percentage"] = (item["total_marks"] / item["total_full_marks"]) * 100 if item["total_full_marks"] > 0 else 0.0
+            item["total_marks"] = round(item["total_marks"], 2)
+            item["average_marks"] = round(item["total_marks"] / item["total_subjects"] if item["total_subjects"] > 0 else 0.0, 2)
+            item["percentage"] = round((item["total_marks"] / item["total_full_marks"]) * 100 if item["total_full_marks"] > 0 else 0.0, 2)
             
             calculated_gpa = 0.0
             calculated_grade = "F"

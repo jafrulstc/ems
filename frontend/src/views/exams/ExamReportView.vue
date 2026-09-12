@@ -123,21 +123,29 @@ const selectedYearName = computed(() => {
 
 const printReport = async () => {
   isPrinting.value = true;
-  // Wait for Vue to teleport the component to the body
   await nextTick();
-  // Small delay to ensure browser paints the teleported element
+
+  // Inject @page landscape style dynamically — most reliable cross-browser approach
+  const style = document.createElement('style');
+  style.id = '__landscape_print_style__';
+  style.textContent = `@page { size: A4 landscape !important; margin: 1cm !important; }`;
+  document.head.appendChild(style);
+
   setTimeout(() => {
     window.print();
+    // Remove the injected style after print dialog closes
+    const el = document.getElementById('__landscape_print_style__');
+    if (el) el.remove();
     isPrinting.value = false;
-  }, 100);
+  }, 150);
 };
 
 const exportToExcel = () => {
-  const headers = ['ক্রমিক নং', 'শিক্ষার্থীদের নাম', ...uniqueSubjects.value, 'মোট', 'গড়', 'শতাংশ', 'জিপিএ', 'গ্রেড', 'মেধাক্রম'];
+  const headers = ['ক্র. নং', 'শিক্ষার্থীদের নাম', ...uniqueSubjects.value, 'মোট', 'গড়', 'শতাংশ', 'জিপিএ', 'গ্রেড', 'মেধাক্রম'];
   
   const data = meritList.value.map((row, index) => {
     const rowData: any = {
-      'ক্রমিক নং': index + 1,
+      'ক্র. নং': index + 1,
       'শিক্ষার্থীদের নাম': row.student_name,
     };
     
@@ -145,7 +153,7 @@ const exportToExcel = () => {
       rowData[subj] = row.subjects[subj] !== undefined ? row.subjects[subj].obtained_marks : '-';
     });
     
-    rowData['মোট'] = row.total_marks;
+    rowData['মোট'] = Number(row.total_marks.toFixed(2));
     rowData['গড়'] = row.average_marks ? row.average_marks.toFixed(2) : '0.00';
     rowData['শতাংশ'] = row.percentage ? row.percentage.toFixed(2) + '%' : '0.00%';
     rowData['জিপিএ'] = row.has_failed ? '0.00' : (row.gpa !== null && row.gpa !== undefined ? row.gpa.toFixed(2) : '0.00');
@@ -276,7 +284,7 @@ const exportToExcel = () => {
         <table class="merit-table">
           <thead>
             <tr>
-              <th width="5%">ক্রমিক<br>নং</th>
+              <th width="5%">ক্র.<br>নং</th>
               <th width="20%">শিক্ষার্থীদের নাম</th>
               <th v-for="subj in uniqueSubjects" :key="subj">{{ subj }}</th>
               <th width="6%">মোট</th>
@@ -292,9 +300,9 @@ const exportToExcel = () => {
               <td class="text-center">{{ index + 1 }}</td>
               <td>{{ row.student_name }}</td>
               <td class="text-center" v-for="subj in uniqueSubjects" :key="subj">
-                {{ row.subjects[subj] !== undefined ? row.subjects[subj].obtained_marks : '-' }}
+                {{ row.subjects[subj] !== undefined ? Number(row.subjects[subj].obtained_marks.toFixed(2)) : '-' }}
               </td>
-              <td class="text-center">{{ row.total_marks }}</td>
+              <td class="text-center">{{ Number(row.total_marks.toFixed(2)) }}</td>
               <td class="text-center">{{ row.average_marks ? row.average_marks.toFixed(2) : '0.00' }}</td>
               <td class="text-center">{{ row.percentage ? row.percentage.toFixed(2) : '0.00' }}%</td>
               <td class="text-center">{{ row.has_failed ? '0.00' : (row.gpa !== null && row.gpa !== undefined ? row.gpa.toFixed(2) : '0.00') }}</td>
@@ -480,17 +488,21 @@ const exportToExcel = () => {
 
 /* Print Styles */
 @media print {
-  @page {
-    size: landscape;
-    margin: 1cm;
-  }
-  
   .is-printing-mode {
     position: static;
     width: 100%;
     padding: 0;
     box-shadow: none;
     background: white;
+  }
+
+  .report-wrapper {
+    overflow: visible !important;
+  }
+
+  .report-container {
+    min-width: 100% !important;
+    width: 100% !important;
   }
 
   .no-print {
@@ -504,3 +516,12 @@ const exportToExcel = () => {
   }
 }
 </style>
+
+<style>
+@media print {
+  @page {
+    margin: 1cm;
+  }
+}
+</style>
+

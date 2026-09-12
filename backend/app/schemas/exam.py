@@ -2,7 +2,7 @@ import uuid
 from datetime import date, time
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ExamTypeBase(BaseModel):
@@ -56,6 +56,12 @@ class ExamResultBase(BaseModel):
     obtained_marks: float
     grade: str | None = None
     status: Literal["PRESENT", "ABSENT", "WITHHELD", "EXPELLED"] = "PRESENT"
+
+    @field_validator('obtained_marks')
+    @classmethod
+    def round_marks(cls, v):
+        return round(v, 2)
+
 
 class ExamResultCreate(ExamResultBase):
     pass

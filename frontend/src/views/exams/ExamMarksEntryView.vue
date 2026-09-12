@@ -116,7 +116,7 @@ onMounted(loadOptions);
           <tr v-for="result in results" :key="result.id">
             <td>{{ result.enrollment_id }}</td>
             <td>
-              <InputText type="number" v-model="result.obtained_marks" style="width: 120px;" />
+              <InputText type="number" v-model="result.obtained_marks" style="width: 120px;" step="0.01" />
             </td>
             <td><strong>{{ result.grade || 'N/A' }}</strong></td>
           </tr>
