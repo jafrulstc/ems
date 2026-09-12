@@ -1,0 +1,15 @@
+SELECT 
+    er.*,
+    es.exam_date,
+    es.full_marks,
+    es.pass_marks
+FROM 
+    exam.exam_results er
+JOIN 
+    exam.exam_schedules es ON er.exam_schedule_id = es.id
+WHERE 
+    es.class_id = '43d4e42b-e5fd-4c4a-a084-3e4cf87d8dc4' // নার্সারি
+    AND es.exam_id = 'ce04dc44-3a89-4b91-9eff-24e1217fe80c';
+
+
+// 5b3ee55e-1b94-4ad4-92ae-0953f3339b60 প্লে

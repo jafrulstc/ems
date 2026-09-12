@@ -6,9 +6,11 @@ Business logic for Student, Guardian, and Enrollment management.
 
 import uuid
 
+from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.pagination import paginate
 
 from app.models.student import Enrollment, Guardian, Student
 from app.schemas.student import (
@@ -30,9 +32,8 @@ class StudentService:
         return db
 
     @staticmethod
-    async def get_guardians(session: AsyncSession, skip: int = 0, limit: int = 100) -> list[Guardian]:
-        result = await session.execute(select(Guardian).offset(skip).limit(limit))
-        return list(result.scalars().all())
+    async def get_guardians(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Guardian), page, limit, fetch_all)
 
     @staticmethod
     async def update_guardian(guardian_id: str, data: GuardianCreate, session: AsyncSession) -> Guardian:
@@ -88,9 +89,8 @@ class StudentService:
         return db
 
     @staticmethod
-    async def get_students(session: AsyncSession, skip: int = 0, limit: int = 100) -> list[Student]:
-        result = await session.execute(select(Student).offset(skip).limit(limit))
-        return list(result.scalars().all())
+    async def get_students(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Student), page, limit, fetch_all)
 
     @staticmethod
     async def update_student(student_id: str, data: StudentCreate, session: AsyncSession) -> Student:
@@ -140,9 +140,8 @@ class StudentService:
         return db
 
     @staticmethod
-    async def get_enrollments(session: AsyncSession, skip: int = 0, limit: int = 100) -> list[Enrollment]:
-        result = await session.execute(select(Enrollment).offset(skip).limit(limit))
-        return list(result.scalars().all())
+    async def get_enrollments(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Enrollment), page, limit, fetch_all)
 
     @staticmethod
     async def update_enrollment(enrollment_id: str, data: EnrollmentCreate, session: AsyncSession) -> Enrollment:

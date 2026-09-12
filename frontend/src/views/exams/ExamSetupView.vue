@@ -18,7 +18,7 @@ const activeTab = ref('types');
 
 const exams = ref<any[]>([]);
 const schedules = ref<any[]>([]);
-const results = ref<any[]>([]);
+
 const gradingScales = ref<any[]>([]);
 const examTypes = ref<any[]>([]);
 const subjects = ref<any[]>([]);
@@ -63,23 +63,21 @@ const filteredSchedules = computed(() => {
 const load = async () => {
   loading.value = true;
   try {
-    const [examsData, schedulesData, resultsData, scalesData, typesData, subjectsData, studentsData, enrollmentsData, yearsData, ycsData, classesData] = await Promise.all([
-      ExamService.getExams(),
-      ExamService.getSchedules(),
-      ExamService.getResults(),
-      ExamService.getGradingScales(),
-      ExamService.getExamTypes(),
-      AcademicService.getSubjects().catch(() => []),
-      StudentService.getStudents().catch(() => []),
-      StudentService.getEnrollments().catch(() => []),
-      AcademicService.getYears().catch(() => []),
-      AcademicService.getYearlyClassSubjects().catch(() => []),
-      AcademicService.getClasses().catch(() => []),
+    const [examsData, schedulesData, scalesData, typesData, subjectsData, studentsData, enrollmentsData, yearsData, ycsData, classesData] = await Promise.all([
+      ExamService.getExams({fetch_all: true}).then(r => r.items),
+      ExamService.getSchedules({fetch_all: true}).then(r => r.items),
+      ExamService.getGradingScales({fetch_all: true}).then(r => r.items),
+      ExamService.getExamTypes({fetch_all: true}).then(r => r.items),
+      AcademicService.getSubjects({fetch_all: true}).then(r => r.items).catch(() => []),
+      StudentService.getStudents({fetch_all: true}).then(r => r.items).catch(() => []),
+      StudentService.getEnrollments({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getYears({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getYearlyClassSubjects({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getClasses({fetch_all: true}).then(r => r.items).catch(() => []),
     ]);
 
     exams.value = examsData;
     schedules.value = schedulesData;
-    results.value = resultsData;
     gradingScales.value = scalesData;
     examTypes.value = typesData;
     subjects.value = subjectsData;
@@ -90,7 +88,7 @@ const load = async () => {
     classes.value = classesData;
 
     if (selectedScheduleId.value) {
-      loadMarks();
+      await loadMarks();
     }
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Load failed', life: 3000 });
@@ -208,59 +206,81 @@ const getDynamicGrade = (result: any) => {
   return 'N/A';
 };
 
-const loadMarks = () => {
+// ── Pagination state ─────────────────────────────────────
+const resultsPage = ref(1);
+const resultsLimit = ref(50); // 0 = সকল (All)
+
+const paginatedResults = computed(() => {
+  if (resultsLimit.value === 0) return filteredResults.value;
+  const start = (resultsPage.value - 1) * resultsLimit.value;
+  return filteredResults.value.slice(start, start + resultsLimit.value);
+});
+
+const totalResultPages = computed(() => {
+  if (resultsLimit.value === 0 || filteredResults.value.length === 0) return 1;
+  return Math.ceil(filteredResults.value.length / resultsLimit.value);
+});
+
+const loadMarks = async () => {
   if (!selectedScheduleId.value || !selectedExamId.value) {
     filteredResults.value = [];
     return;
   }
   markEntryLoading.value = true;
-  
-  const schedule = schedules.value.find(s => s.id === selectedScheduleId.value);
-  const exam = exams.value.find(e => e.id === selectedExamId.value);
-  
-  if (!schedule || !exam) {
-    filteredResults.value = [];
+  resultsPage.value = 1;
+
+  try {
+    const schedule = schedules.value.find(s => s.id === selectedScheduleId.value);
+    const exam = exams.value.find(e => e.id === selectedExamId.value);
+
+    if (!schedule || !exam) {
+      filteredResults.value = [];
+      return;
+    }
+
+    // Backend থেকে শুধু এই schedule-র সব result আনো (server-side filter)
+    const response = await ExamService.getResults({
+      exam_schedule_id: selectedScheduleId.value,
+      fetch_all: true,
+    });
+    const scheduleResults: any[] = response.items;
+
+    const validEnrollments = enrollments.value.filter(e =>
+      e.academic_year_id === exam.academic_year_id && e.class_id === schedule.class_id
+    );
+
+    const mapped = validEnrollments.map(enr => {
+      const existing = scheduleResults.find((r: any) => r.enrollment_id === enr.id);
+      if (existing) return { ...existing, isNew: false };
+      return {
+        enrollment_id: enr.id,
+        exam_schedule_id: schedule.id,
+        obtained_marks: 0,
+        grade: null,
+        status: 'PRESENT',
+        isNew: true
+      };
+    });
+
+    mapped.sort((a, b) => {
+      const enrA = validEnrollments.find(e => e.id === a.enrollment_id);
+      const enrB = validEnrollments.find(e => e.id === b.enrollment_id);
+      const studentA = students.value.find(s => s.id === enrA?.student_id);
+      const studentB = students.value.find(s => s.id === enrB?.student_id);
+      const idA = studentA?.student_id_no || Number.MAX_SAFE_INTEGER;
+      const idB = studentB?.student_id_no || Number.MAX_SAFE_INTEGER;
+      if (idA !== idB) return idA - idB;
+      const rollA = enrA?.roll_number ? String(enrA.roll_number) : 'ZZZ';
+      const rollB = enrB?.roll_number ? String(enrB.roll_number) : 'ZZZ';
+      return rollA.localeCompare(rollB, undefined, { numeric: true });
+    });
+
+    filteredResults.value = mapped;
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'মার্কস লোড ব্যর্থ হয়েছে', life: 3000 });
+  } finally {
     markEntryLoading.value = false;
-    return;
   }
-
-  const validEnrollments = enrollments.value.filter(e => 
-    e.academic_year_id === exam.academic_year_id && e.class_id === schedule.class_id
-  );
-
-  const mapped = validEnrollments.map(enr => {
-    const existing = results.value.find(r => r.exam_schedule_id === schedule.id && r.enrollment_id === enr.id);
-    if (existing) return { ...existing, isNew: false };
-    
-    return {
-      enrollment_id: enr.id,
-      exam_schedule_id: schedule.id,
-      obtained_marks: 0,
-      grade: null,
-      status: 'PRESENT',
-      isNew: true
-    };
-  });
-
-  mapped.sort((a, b) => {
-    const enrA = validEnrollments.find(e => e.id === a.enrollment_id);
-    const enrB = validEnrollments.find(e => e.id === b.enrollment_id);
-    
-    const studentA = students.value.find(s => s.id === enrA?.student_id);
-    const studentB = students.value.find(s => s.id === enrB?.student_id);
-
-    const idA = studentA?.student_id_no || Number.MAX_SAFE_INTEGER;
-    const idB = studentB?.student_id_no || Number.MAX_SAFE_INTEGER;
-
-    if (idA !== idB) return idA - idB;
-
-    const rollA = enrA?.roll_number ? String(enrA.roll_number) : 'ZZZ';
-    const rollB = enrB?.roll_number ? String(enrB.roll_number) : 'ZZZ';
-    return rollA.localeCompare(rollB, undefined, { numeric: true });
-  });
-
-  filteredResults.value = mapped;
-  markEntryLoading.value = false;
 };
 
 const availableExamsForYear = computed(() => {
@@ -290,6 +310,7 @@ const onExamChange = () => {
 const onClassChange = () => {
   selectedScheduleId.value = null;
   filteredResults.value = [];
+  resultsPage.value = 1;
 };
 
 const saveMarks = async () => {
@@ -495,7 +516,7 @@ const generateResult = async () => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="result in filteredResults" :key="result.id">
+                <tr v-for="result in paginatedResults" :key="result.id || result.enrollment_id">
                   <td style="white-space: nowrap;">{{ getStudentInfo(result.enrollment_id) }}</td>
                   <td style="text-align: center;">
                     <InputNumber 
@@ -520,6 +541,25 @@ const generateResult = async () => {
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-bar" v-if="filteredResults.length > 0">
+            <span class="pagination-info">মোট <strong>{{ filteredResults.length }}</strong> জন শিক্ষার্থী</span>
+            <div class="pagination-nav" v-if="resultsLimit !== 0 && totalResultPages > 1">
+              <button class="page-btn" @click="resultsPage--" :disabled="resultsPage === 1">&#9664;</button>
+              <span class="page-indicator">{{ resultsPage }} / {{ totalResultPages }}</span>
+              <button class="page-btn" @click="resultsPage++" :disabled="resultsPage === totalResultPages">&#9654;</button>
+            </div>
+            <div class="per-page-wrap">
+              <label>প্রতি পেজে:</label>
+              <select v-model="resultsLimit" class="per-page-select" @change="resultsPage = 1">
+                <option :value="25">25</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+                <option :value="0">সকল</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -678,5 +718,72 @@ const generateResult = async () => {
 }
 .empty-state p {
   margin: 0;
+}
+
+/* Pagination */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid #f0f4f8;
+  margin-top: 0.75rem;
+}
+.pagination-info {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.page-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334e68;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.page-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.page-indicator {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334e68;
+  min-width: 50px;
+  text-align: center;
+}
+.per-page-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+.per-page-select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: #fff;
+  color: #1e293b;
+  cursor: pointer;
 }
 </style>

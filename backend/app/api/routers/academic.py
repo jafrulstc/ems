@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 
 from app.api.deps import SessionDep, TenantDep, require_permission
+from app.api.pagination import PaginatedResponse
 from app.schemas.academic import (
     AcademicYearCreate,
     AcademicYearRead,
@@ -28,9 +29,9 @@ router = APIRouter()
 async def create_department(session: SessionDep, tenant: TenantDep, dept_in: DepartmentCreate) -> Any:
     return await AcademicService.create_department(session, tenant.id, dept_in)
 
-@router.get("/departments", response_model=list[DepartmentRead], dependencies=[Depends(require_permission("academic:read"))])
-async def read_departments(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_departments(session, skip, limit)
+@router.get("/departments", response_model=PaginatedResponse[DepartmentRead], dependencies=[Depends(require_permission("academic:read"))])
+async def read_departments(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_departments(session, page, limit, fetch_all)
 
 @router.put("/departments/{dept_id}", response_model=DepartmentRead, dependencies=[Depends(require_permission("academic:update"))])
 async def update_department(dept_id: str, session: SessionDep, tenant: TenantDep, dept_in: DepartmentCreate) -> Any:
@@ -45,9 +46,9 @@ async def delete_department(dept_id: str, session: SessionDep, tenant: TenantDep
 async def create_academic_year(session: SessionDep, tenant: TenantDep, year_in: AcademicYearCreate) -> Any:
     return await AcademicService.create_academic_year(session, tenant.id, year_in)
 
-@router.get("/years", response_model=list[AcademicYearRead], dependencies=[Depends(require_permission("academic_year:read"))])
-async def read_academic_years(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_academic_years(session, skip, limit)
+@router.get("/years", response_model=PaginatedResponse[AcademicYearRead], dependencies=[Depends(require_permission("academic_year:read"))])
+async def read_academic_years(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_academic_years(session, page, limit, fetch_all)
 
 @router.put("/years/{year_id}", response_model=AcademicYearRead, dependencies=[Depends(require_permission("academic_year:update"))])
 async def update_academic_year(year_id: str, session: SessionDep, tenant: TenantDep, year_in: AcademicYearCreate) -> Any:
@@ -62,9 +63,9 @@ async def delete_academic_year(year_id: str, session: SessionDep, tenant: Tenant
 async def create_class(session: SessionDep, tenant: TenantDep, class_in: ClassCreate) -> Any:
     return await AcademicService.create_class(session, tenant.id, class_in)
 
-@router.get("/classes", response_model=list[ClassRead], dependencies=[Depends(require_permission("class:read"))])
-async def read_classes(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_classes(session, skip, limit)
+@router.get("/classes", response_model=PaginatedResponse[ClassRead], dependencies=[Depends(require_permission("class:read"))])
+async def read_classes(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_classes(session, page, limit, fetch_all)
 
 @router.put("/classes/{class_id}", response_model=ClassRead, dependencies=[Depends(require_permission("class:update"))])
 async def update_class(class_id: str, session: SessionDep, tenant: TenantDep, class_in: ClassCreate) -> Any:
@@ -79,9 +80,9 @@ async def delete_class(class_id: str, session: SessionDep, tenant: TenantDep) ->
 async def create_section(session: SessionDep, tenant: TenantDep, section_in: SectionCreate) -> Any:
     return await AcademicService.create_section(session, tenant.id, section_in)
 
-@router.get("/sections", response_model=list[SectionRead], dependencies=[Depends(require_permission("section:read"))])
-async def read_sections(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_sections(session, skip, limit)
+@router.get("/sections", response_model=PaginatedResponse[SectionRead], dependencies=[Depends(require_permission("section:read"))])
+async def read_sections(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_sections(session, page, limit, fetch_all)
 
 @router.put("/sections/{section_id}", response_model=SectionRead, dependencies=[Depends(require_permission("section:update"))])
 async def update_section(section_id: str, session: SessionDep, tenant: TenantDep, section_in: SectionCreate) -> Any:
@@ -96,9 +97,9 @@ async def delete_section(section_id: str, session: SessionDep, tenant: TenantDep
 async def create_subject(session: SessionDep, tenant: TenantDep, subject_in: SubjectCreate) -> Any:
     return await AcademicService.create_subject(session, tenant.id, subject_in)
 
-@router.get("/subjects", response_model=list[SubjectRead], dependencies=[Depends(require_permission("subject:read"))])
-async def read_subjects(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_subjects(session, skip, limit)
+@router.get("/subjects", response_model=PaginatedResponse[SubjectRead], dependencies=[Depends(require_permission("subject:read"))])
+async def read_subjects(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_subjects(session, page, limit, fetch_all)
 
 @router.put("/subjects/{subject_id}", response_model=SubjectRead, dependencies=[Depends(require_permission("subject:update"))])
 async def update_subject(subject_id: str, session: SessionDep, tenant: TenantDep, subject_in: SubjectCreate) -> Any:
@@ -113,9 +114,9 @@ async def delete_subject(subject_id: str, session: SessionDep, tenant: TenantDep
 async def create_shift(session: SessionDep, tenant: TenantDep, shift_in: ShiftCreate) -> Any:
     return await AcademicService.create_shift(session, tenant.id, shift_in)
 
-@router.get("/shifts", response_model=list[ShiftRead], dependencies=[Depends(require_permission("academic:read"))])
-async def read_shifts(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_shifts(session, skip, limit)
+@router.get("/shifts", response_model=PaginatedResponse[ShiftRead], dependencies=[Depends(require_permission("academic:read"))])
+async def read_shifts(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_shifts(session, page, limit, fetch_all)
 
 @router.put("/shifts/{shift_id}", response_model=ShiftRead, dependencies=[Depends(require_permission("academic:update"))])
 async def update_shift(shift_id: str, session: SessionDep, tenant: TenantDep, shift_in: ShiftCreate) -> Any:
@@ -130,9 +131,9 @@ async def delete_shift(shift_id: str, session: SessionDep, tenant: TenantDep) ->
 async def create_yearly_class_subject(session: SessionDep, tenant: TenantDep, ycs_in: YearlyClassSubjectCreate) -> Any:
     return await AcademicService.create_yearly_class_subject(session, tenant.id, ycs_in)
 
-@router.get("/yearly-class-subjects", response_model=list[YearlyClassSubjectRead], dependencies=[Depends(require_permission("academic:read"))])
-async def read_yearly_class_subjects(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return await AcademicService.read_yearly_class_subjects(session, skip, limit)
+@router.get("/yearly-class-subjects", response_model=PaginatedResponse[YearlyClassSubjectRead], dependencies=[Depends(require_permission("academic:read"))])
+async def read_yearly_class_subjects(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await AcademicService.read_yearly_class_subjects(session, page, limit, fetch_all)
 
 @router.put("/yearly-class-subjects/{ycs_id}", response_model=YearlyClassSubjectRead, dependencies=[Depends(require_permission("academic:update"))])
 async def update_yearly_class_subject(ycs_id: str, session: SessionDep, tenant: TenantDep, ycs_in: YearlyClassSubjectCreate) -> Any:

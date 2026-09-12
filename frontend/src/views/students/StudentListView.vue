@@ -35,12 +35,12 @@ const load = async () => {
   loading.value = true;
   try {
     const [st, gu, en, yr, cl, se, br, nextId] = await Promise.all([
-      StudentService.getStudents(),
-      StudentService.getGuardians(),
-      StudentService.getEnrollments(),
-      AcademicService.getYears().catch(() => []),
-      AcademicService.getClasses().catch(() => []),
-      AcademicService.getSections().catch(() => []),
+      StudentService.getStudents({fetch_all: true}).then(r => r.items),
+      StudentService.getGuardians({fetch_all: true}).then(r => r.items),
+      StudentService.getEnrollments({fetch_all: true}).then(r => r.items),
+      AcademicService.getYears({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getClasses({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getSections({fetch_all: true}).then(r => r.items).catch(() => []),
       TenantService.getBranches().catch(() => []),
       StudentService.getNextStudentIdNo().catch(() => 1),
     ]);

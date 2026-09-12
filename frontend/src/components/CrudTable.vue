@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -14,7 +14,7 @@ import { useConfirm } from 'primevue/useconfirm';
 interface ColDef {
   field: string;
   header: string;
-  displayField?: string; // Optional field name for rendering in table column (e.g. department_name)
+  displayField?: string;
   type?: 'text' | 'date' | 'time' | 'number' | 'select' | 'password' | 'boolean';
   options?: { label: string; value: any }[] | ((data: any) => { label: string; value: any }[]);
   required?: boolean;
@@ -24,13 +24,14 @@ interface ColDef {
 
 const props = defineProps<{
   title: string;
-  rows: any[];
+  rows?: any[]; // Legacy mode
+  fetchFn?: (params: { page: number; limit: number }) => Promise<{items: any[], total: number}>; // Lazy mode
   columns: ColDef[];
   loading?: boolean;
   createFn: (data: any) => Promise<any>;
   updateFn: (id: string, data: any) => Promise<any>;
   deleteFn: (id: string) => Promise<any>;
-  afterCreate?: (created: any) => string; // optional: return a custom success message string
+  afterCreate?: (created: any) => string;
 }>();
 
 const emit = defineEmits<{ refresh: [] }>();
@@ -48,6 +49,47 @@ const filters = ref({
 });
 
 const dialogTitle = computed(() => editingRow.value ? `Edit ${props.title.slice(0, -1)}` : `New ${props.title.slice(0, -1)}`);
+
+// --- Pagination & Lazy Load ---
+const isLazy = computed(() => !!props.fetchFn);
+const lazyData = ref<any[]>([]);
+const totalRecords = ref(0);
+const lazyLoading = ref(false);
+const lazyPage = ref(1);
+const lazyLimit = ref(10);
+
+const tableRows = computed(() => {
+  if (isLazy.value) return lazyData.value;
+  return props.rows || [];
+});
+
+const tableLoading = computed(() => props.loading || lazyLoading.value);
+const tableTotal = computed(() => isLazy.value ? totalRecords.value : (props.rows?.length || 0));
+
+async function loadLazyData() {
+  if (!props.fetchFn) return;
+  lazyLoading.value = true;
+  try {
+    const res = await props.fetchFn({ page: lazyPage.value, limit: lazyLimit.value });
+    lazyData.value = res.items;
+    totalRecords.value = res.total;
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error loading data', life: 3000 });
+  } finally {
+    lazyLoading.value = false;
+  }
+}
+
+function onPage(event: any) {
+  lazyPage.value = event.page + 1;
+  lazyLimit.value = event.rows;
+  if (isLazy.value) loadLazyData();
+}
+
+onMounted(() => {
+  if (isLazy.value) loadLazyData();
+});
+// ------------------------------
 
 function openCreate() {
   editingRow.value = null;
@@ -79,6 +121,7 @@ async function save() {
     }
     dialogVisible.value = false;
     emit('refresh');
+    if (isLazy.value) loadLazyData();
   } catch (e: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: e?.response?.data?.detail || 'Failed', life: 3000 });
   } finally {
@@ -97,6 +140,7 @@ function confirmDelete(row: any) {
         await props.deleteFn(row.id);
         toast.add({ severity: 'success', summary: 'Deleted', life: 2000 });
         emit('refresh');
+        if (isLazy.value) loadLazyData();
       } catch (e: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Delete failed', life: 3000 });
       }
@@ -121,7 +165,7 @@ function confirmDelete(row: any) {
       <Button :label="`Add ${title.slice(0,-1)}`" icon="pi pi-plus" size="small" @click="openCreate" />
     </div>
 
-    <DataTable :value="rows" :loading="loading" scrollable stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)" paginator :rows="10" :rowsPerPageOptions="[10, 20, 50, 100]">
+    <DataTable :value="tableRows" :loading="tableLoading" scrollable stripedRows size="small" :filters="filters" :globalFilterFields="columns.map(c => c.displayField || c.field)" paginator :rows="lazyLimit" :rowsPerPageOptions="[10, 20, 50, 100]" :lazy="isLazy" :totalRecords="tableTotal" @page="onPage">
       <Column v-for="col in columns.filter(c => !c.hideInTable)" :key="col.field" :field="col.displayField || col.field" :header="col.header" sortable>
         <template #body="{ data }">
           <span v-if="col.type === 'boolean'">

@@ -31,10 +31,10 @@ const meritList = ref<any[]>([]);
 onMounted(async () => {
   try {
     const [examsData, yearsData, classesData, scalesData, institutesData] = await Promise.all([
-      ExamService.getExams(),
-      AcademicService.getYears().catch(() => []),
-      AcademicService.getClasses().catch(() => []),
-      ExamService.getGradingScales().catch(() => []),
+      ExamService.getExams({fetch_all: true}).then(r => r.items),
+      AcademicService.getYears({fetch_all: true}).then(r => r.items).catch(() => []),
+      AcademicService.getClasses({fetch_all: true}).then(r => r.items).catch(() => []),
+      ExamService.getGradingScales({fetch_all: true}).then(r => r.items).catch(() => []),
       TenantService.getInstitutes().catch(() => [])
     ]);
     exams.value = examsData;

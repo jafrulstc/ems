@@ -30,13 +30,13 @@ const load = async () => {
   loading.value = true;
   try {
     [years.value, departments.value, classes.value, sections.value, subjects.value, shifts.value, yearlyClassSubjects.value, branches.value] = await Promise.all([
-      AcademicService.getYears(),
-      AcademicService.getDepartments(),
-      AcademicService.getClasses(),
-      AcademicService.getSections(),
-      AcademicService.getSubjects(),
-      AcademicService.getShifts(),
-      AcademicService.getYearlyClassSubjects(),
+      AcademicService.getYears({fetch_all: true}).then(r => r.items),
+      AcademicService.getDepartments({fetch_all: true}).then(r => r.items),
+      AcademicService.getClasses({fetch_all: true}).then(r => r.items),
+      AcademicService.getSections({fetch_all: true}).then(r => r.items),
+      AcademicService.getSubjects({fetch_all: true}).then(r => r.items),
+      AcademicService.getShifts({fetch_all: true}).then(r => r.items),
+      AcademicService.getYearlyClassSubjects({fetch_all: true}).then(r => r.items),
       TenantService.getBranches(),
     ]);
   } catch (e) {

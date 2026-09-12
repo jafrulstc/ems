@@ -19,8 +19,8 @@ const loadOptions = async () => {
   loading.value = true;
   try {
     const [examsData, schedulesData] = await Promise.all([
-      ExamService.getExams(),
-      ExamService.getSchedules()
+      ExamService.getExams({fetch_all: true}).then(r => r.items),
+      ExamService.getSchedules({fetch_all: true}).then(r => r.items)
     ]);
     exams.value = examsData;
     schedules.value = schedulesData;

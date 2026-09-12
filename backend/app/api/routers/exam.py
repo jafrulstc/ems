@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.api.deps import SessionDep, TenantDep, require_permission
+from app.api.pagination import paginate, PaginatedResponse
 from app.models.exam import Exam, ExamResult, ExamSchedule, ExamType, GradingScale
 from app.schemas.exam import (
     ExamCreate,
@@ -33,9 +34,9 @@ async def create_grading_scale(session: SessionDep, tenant: TenantDep, scale_in:
     db = GradingScale(**scale_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
-@router.get("/grading-scales", response_model=list[GradingScaleRead], dependencies=[Depends(require_permission("exam:read"))])
-async def read_grading_scales(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return (await session.execute(select(GradingScale).offset(skip).limit(limit))).scalars().all()
+@router.get("/grading-scales", response_model=PaginatedResponse[GradingScaleRead], dependencies=[Depends(require_permission("exam:read"))])
+async def read_grading_scales(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await paginate(session, select(GradingScale), page, limit, fetch_all)
 
 @router.put("/grading-scales/{scale_id}", response_model=GradingScaleRead, dependencies=[Depends(require_permission("exam:create"))])
 async def update_grading_scale(scale_id: str, session: SessionDep, tenant: TenantDep, scale_in: GradingScaleCreate) -> Any:
@@ -56,9 +57,9 @@ async def create_exam(session: SessionDep, tenant: TenantDep, exam_in: ExamCreat
     db = Exam(**exam_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
-@router.get("/", response_model=list[ExamRead], dependencies=[Depends(require_permission("exam:read"))])
-async def read_exams(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return (await session.execute(select(Exam).offset(skip).limit(limit))).scalars().all()
+@router.get("/", response_model=PaginatedResponse[ExamRead], dependencies=[Depends(require_permission("exam:read"))])
+async def read_exams(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await paginate(session, select(Exam), page, limit, fetch_all)
 
 @router.put("/{exam_id}", response_model=ExamRead, dependencies=[Depends(require_permission("exam:create"))])
 async def update_exam(exam_id: str, session: SessionDep, tenant: TenantDep, exam_in: ExamCreate) -> Any:
@@ -80,9 +81,9 @@ async def create_exam_schedule(session: SessionDep, tenant: TenantDep, schedule_
     db = ExamSchedule(**schedule_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
-@router.get("/schedules", response_model=list[ExamScheduleRead], dependencies=[Depends(require_permission("exam:read"))])
-async def read_exam_schedules(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return (await session.execute(select(ExamSchedule).offset(skip).limit(limit))).scalars().all()
+@router.get("/schedules", response_model=PaginatedResponse[ExamScheduleRead], dependencies=[Depends(require_permission("exam:read"))])
+async def read_exam_schedules(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await paginate(session, select(ExamSchedule), page, limit, fetch_all)
 
 @router.put("/schedules/{schedule_id}", response_model=ExamScheduleRead, dependencies=[Depends(require_permission("exam_schedule:create"))])
 async def update_exam_schedule(schedule_id: str, session: SessionDep, tenant: TenantDep, schedule_in: ExamScheduleCreate) -> Any:
@@ -104,9 +105,19 @@ async def create_exam_result(session: SessionDep, tenant: TenantDep, result_in: 
     db = ExamResult(**result_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
-@router.get("/results", response_model=list[ExamResultRead], dependencies=[Depends(require_permission("exam:read"))])
-async def read_exam_results(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return (await session.execute(select(ExamResult).offset(skip).limit(limit))).scalars().all()
+@router.get("/results", response_model=PaginatedResponse[ExamResultRead], dependencies=[Depends(require_permission("exam:read"))])
+async def read_exam_results(
+    session: SessionDep,
+    tenant: TenantDep,
+    page: int = 1,
+    limit: int = 100,
+    exam_schedule_id: uuid.UUID | None = None,
+    fetch_all: bool = False,
+) -> Any:
+    stmt = select(ExamResult)
+    if exam_schedule_id is not None:
+        stmt = stmt.where(ExamResult.exam_schedule_id == exam_schedule_id)
+    return await paginate(session, stmt, page, limit, fetch_all)
 
 @router.put("/results/{result_id}", response_model=ExamResultRead, dependencies=[Depends(require_permission("exam_result:create"))])
 async def update_exam_result(result_id: str, session: SessionDep, tenant: TenantDep, result_in: ExamResultCreate) -> Any:
@@ -127,9 +138,9 @@ async def create_exam_type(session: SessionDep, tenant: TenantDep, type_in: Exam
     db = ExamType(**type_in.model_dump(), tenant_id=tenant.id)
     session.add(db); await session.commit(); await session.refresh(db); return db
 
-@router.get("/types", response_model=list[ExamTypeRead], dependencies=[Depends(require_permission("exam:read"))])
-async def read_exam_types(session: SessionDep, tenant: TenantDep, skip: int = 0, limit: int = 100) -> Any:
-    return (await session.execute(select(ExamType).offset(skip).limit(limit))).scalars().all()
+@router.get("/types", response_model=PaginatedResponse[ExamTypeRead], dependencies=[Depends(require_permission("exam:read"))])
+async def read_exam_types(session: SessionDep, tenant: TenantDep, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+    return await paginate(session, select(ExamType), page, limit, fetch_all)
 
 @router.put("/types/{type_id}", response_model=ExamTypeRead, dependencies=[Depends(require_permission("exam:update"))])
 async def update_exam_type(type_id: str, session: SessionDep, tenant: TenantDep, type_in: ExamTypeCreate) -> Any:

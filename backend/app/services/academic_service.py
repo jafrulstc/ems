@@ -4,6 +4,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.pagination import paginate
 
 from app.models.academic import (
     AcademicClass,
@@ -37,8 +38,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_departments(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(Department).offset(skip).limit(limit))).scalars().all()
+    async def read_departments(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Department), page, limit, fetch_all)
 
     @staticmethod
     async def update_department(session: AsyncSession, dept_id: str, dept_in: DepartmentCreate) -> Any:
@@ -70,8 +71,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_academic_years(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(AcademicYear).offset(skip).limit(limit))).scalars().all()
+    async def read_academic_years(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(AcademicYear), page, limit, fetch_all)
 
     @staticmethod
     async def update_academic_year(session: AsyncSession, year_id: str, year_in: AcademicYearCreate) -> Any:
@@ -103,21 +104,24 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_classes(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        classes = (await session.execute(select(AcademicClass).offset(skip).limit(limit))).scalars().all()
+    async def read_classes(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        paginated = await paginate(session, select(AcademicClass), page, limit, fetch_all)
+        classes = paginated["items"]
         dept_ids = [c.department_id for c in classes if c.department_id]
         dept_map = {}
         if dept_ids:
             depts = (await session.execute(select(Department).where(Department.id.in_(dept_ids)))).scalars().all()
             dept_map = {d.id: d.name for d in depts}
         
-        result = []
+        result_items = []
         for c in classes:
             c_dict = ClassRead.model_validate(c)
             if c.department_id and c.department_id in dept_map:
                 c_dict.department_name = dept_map[c.department_id]
-            result.append(c_dict)
-        return result
+            result_items.append(c_dict)
+            
+        paginated["items"] = result_items
+        return paginated
 
     @staticmethod
     async def update_class(session: AsyncSession, class_id: str, class_in: ClassCreate) -> Any:
@@ -149,8 +153,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_sections(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(Section).offset(skip).limit(limit))).scalars().all()
+    async def read_sections(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Section), page, limit, fetch_all)
 
     @staticmethod
     async def update_section(session: AsyncSession, section_id: str, section_in: SectionCreate) -> Any:
@@ -182,8 +186,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_subjects(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(Subject).offset(skip).limit(limit))).scalars().all()
+    async def read_subjects(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Subject), page, limit, fetch_all)
 
     @staticmethod
     async def update_subject(session: AsyncSession, subject_id: str, subject_in: SubjectCreate) -> Any:
@@ -215,8 +219,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_shifts(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(Shift).offset(skip).limit(limit))).scalars().all()
+    async def read_shifts(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(Shift), page, limit, fetch_all)
 
     @staticmethod
     async def update_shift(session: AsyncSession, shift_id: str, shift_in: ShiftCreate) -> Any:
@@ -248,8 +252,8 @@ class AcademicService:
         return db
 
     @staticmethod
-    async def read_yearly_class_subjects(session: AsyncSession, skip: int = 0, limit: int = 100) -> Any:
-        return (await session.execute(select(YearlyClassSubject).offset(skip).limit(limit))).scalars().all()
+    async def read_yearly_class_subjects(session: AsyncSession, page: int = 1, limit: int = 100, fetch_all: bool = False) -> Any:
+        return await paginate(session, select(YearlyClassSubject), page, limit, fetch_all)
 
     @staticmethod
     async def update_yearly_class_subject(session: AsyncSession, ycs_id: str, ycs_in: YearlyClassSubjectCreate) -> Any:
