@@ -411,8 +411,8 @@ const exportToExcel = () => {
 .stats-box {
   border: 1px solid #000;
   padding: 8px 12px;
-  font-size: 13px;
-  width: 180px;
+  font-size: 15px;
+  width: 200px;
   font-weight: bold;
 }
 .stat-row {
@@ -432,7 +432,7 @@ const exportToExcel = () => {
 }
 .org-name {
   margin: 0 0 5px 0;
-  font-size: 24px;
+  font-size: 36px;
   font-weight: 900;
 }
 .exam-name {
@@ -470,7 +470,7 @@ const exportToExcel = () => {
   width: 100%;
   border-collapse: collapse;
   border: 2px solid #000;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 .merit-table th, .merit-table td {
@@ -481,6 +481,10 @@ const exportToExcel = () => {
   background-color: #f9f9f9;
   text-align: center;
   vertical-align: middle;
+  font-size: 15px;
+}
+.merit-table td {
+  font-size: 14px;
 }
 .text-center {
   text-align: center;

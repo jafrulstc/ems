@@ -242,8 +242,9 @@ const printReport = async () => {
             </div>
 
             <div class="ms-signatures">
-              <div class="sig-line">শ্রেণি শিক্ষকের স্বাক্ষর</div>
-              <div class="sig-line">অধ্যক্ষের স্বাক্ষর</div>
+              <div class="sig-line">অভিভাবকের মতামত ও স্বাক্ষর</div>
+              <div class="sig-line">শিক্ষা সচিবের স্বাক্ষর</div>
+              <div class="sig-line">প্রিন্সিপালের স্বাক্ষর</div>
             </div>
           </div>
         </div>
@@ -492,10 +493,10 @@ const printReport = async () => {
 .sig-line {
   border-top: 1px dashed #000;
   padding-top: 5px;
-  width: 180px;
+  width: 190px;
   text-align: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 @media print {
