@@ -594,11 +594,63 @@ const stopResize = () => {
   .no-print {
     display: none !important;
   }
-  .report-header {
-    border-color: #000 !important;
+  
+  /* Make all non-table borders 1px and uniform in print */
+  .report-header, .stats-box {
+    border: 1px solid #000 !important;
   }
+  
+  .grading-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: none !important;
+  }
+  .grading-table th, .grading-table td {
+    border-bottom: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+    border-top: none !important;
+    border-left: none !important;
+  }
+  .grading-table thead th {
+    border-top: 1px solid #000 !important;
+  }
+  .grading-table th:first-child, .grading-table td:first-child {
+    border-left: 1px solid #000 !important;
+  }
+
+  /* Merit Table: Perfect 1px borders across page breaks */
+  .merit-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: none !important;
+  }
+  
+  .merit-table thead {
+    display: table-header-group;
+  }
+  
+  .merit-table tr {
+    page-break-inside: avoid;
+  }
+
   .merit-table th, .merit-table td {
-    border-color: #000 !important;
+    border-bottom: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+    border-top: none !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    background-clip: padding-box !important;
+  }
+
+  /* Force top border only on header cells so it repeats perfectly on page 2 */
+  .merit-table thead th {
+    border-top: 1px solid #000 !important;
+  }
+  
+  /* Force left border on the first column of every row */
+  .merit-table th:first-child, .merit-table td:first-child {
+    border-left: 1px solid #000 !important;
   }
 }
 </style>

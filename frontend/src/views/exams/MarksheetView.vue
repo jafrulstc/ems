@@ -485,14 +485,16 @@ const printReport = async () => {
 
 .ms-signatures {
   margin-top: auto;
+  margin-bottom: 30px;
   display: flex;
   justify-content: space-between;
-  padding-top: 30px;
+  padding-top: 40px;
 }
 
 .sig-line {
   border-top: 1px dashed #000;
   padding-top: 5px;
+  padding-bottom: 40px;
   width: 190px;
   text-align: center;
   font-weight: 600;
