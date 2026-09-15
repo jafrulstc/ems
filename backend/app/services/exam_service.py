@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -207,7 +208,8 @@ class ExamService:
             YearlyClassSubject,
             (YearlyClassSubject.subject_id == ExamSchedule.subject_id) &
             (YearlyClassSubject.class_id == Enrollment.class_id) &
-            (YearlyClassSubject.academic_year_id == Enrollment.academic_year_id)
+            (YearlyClassSubject.academic_year_id == Enrollment.academic_year_id) &
+            (YearlyClassSubject.is_deleted == False)  # noqa: E712 — prevents duplicate rows from soft-deleted YCS entries
         )
 
         if exam_id:
@@ -219,7 +221,7 @@ class ExamService:
             
         results = (await session.execute(stmt)).all()
         
-        merit_map = {}
+        merit_map: dict[tuple[uuid.UUID, uuid.UUID], dict[str, Any]] = {}
         for row in results:
             key = (row.enrollment_id, row.exam_id)
             if key not in merit_map:
@@ -243,17 +245,15 @@ class ExamService:
                     "subjects": {}
                 }
             
-            merit_map[key]["total_marks"] += row.obtained_marks
-            merit_map[key]["total_full_marks"] += row.full_marks
-            merit_map[key]["total_subjects"] += 1
             point = grade_to_point.get(row.grade, 0.0) if row.grade else 0.0
+            # Use dict assignment (keyed by subject name) — safe against duplicate join rows
             merit_map[key]["subjects"][row.subject_name] = {
                 "obtained_marks": row.obtained_marks,
                 "full_marks": row.full_marks,
                 "grade": row.grade,
-                "grade_point": point
+                "grade_point": point,
+                "affects_result_calculation": row.affects_result_calculation,
             }
-            merit_map[key]["total_grade_points"] += point
             
             status = row.status.upper() if row.status else "PRESENT"
             affects = row.affects_result_calculation if row.affects_result_calculation is not None else True
@@ -268,7 +268,13 @@ class ExamService:
 
         grouped_by_exam_class: dict[tuple[uuid.UUID, uuid.UUID], list[dict]] = {}
         for item in merit_map.values():
-            item["total_marks"] = round(item["total_marks"], 2)
+            # Recompute totals from subjects dict — this is the source of truth and
+            # is immune to duplicate rows from the SQL join (dict keys overwrite silently).
+            subjects = item["subjects"]
+            item["total_marks"] = round(sum(s["obtained_marks"] for s in subjects.values()), 2)
+            item["total_full_marks"] = sum(s["full_marks"] for s in subjects.values())
+            item["total_subjects"] = len(subjects)
+            item["total_grade_points"] = round(sum(s["grade_point"] for s in subjects.values()), 4)
             item["average_marks"] = round(item["total_marks"] / item["total_subjects"] if item["total_subjects"] > 0 else 0.0, 2)
             item["percentage"] = round((item["total_marks"] / item["total_full_marks"]) * 100 if item["total_full_marks"] > 0 else 0.0, 2)
             

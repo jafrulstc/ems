@@ -4,6 +4,7 @@
 
 # Nginx / Runtime logs and temp files
 temp/
+test/
 
 # IDE / Editors
 .vscode/

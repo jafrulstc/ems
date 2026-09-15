@@ -141,7 +141,7 @@ const printReport = async () => {
 };
 
 const exportToExcel = () => {
-  const headers = ['ক্র. নং', 'শিক্ষার্থীদের নাম', ...uniqueSubjects.value, 'মোট', 'গড়', 'শতাংশ', 'জিপিএ', 'গ্রেড', 'মেধাক্রম'];
+  const headers = ['ক্র. নং', 'শিক্ষার্থীদের নাম', ...uniqueSubjects.value, 'মোট', 'প্রাপ্ত', 'গড়', 'জিপিএ', 'গ্রেড', 'মেধাক্রম'];
   
   const data = meritList.value.map((row, index) => {
     const rowData: any = {
@@ -153,9 +153,9 @@ const exportToExcel = () => {
       rowData[subj] = row.subjects[subj] !== undefined ? row.subjects[subj].obtained_marks : '-';
     });
     
-    rowData['মোট'] = Number(row.total_marks.toFixed(2));
+    rowData['মোট'] = Number(row.total_full_marks.toFixed(2));
+    rowData['প্রাপ্ত'] = Number(row.total_marks.toFixed(2));
     rowData['গড়'] = row.average_marks ? row.average_marks.toFixed(2) : '0.00';
-    rowData['শতাংশ'] = row.percentage ? row.percentage.toFixed(2) + '%' : '0.00%';
     rowData['জিপিএ'] = row.has_failed ? '0.00' : (row.gpa !== null && row.gpa !== undefined ? row.gpa.toFixed(2) : '0.00');
     rowData['গ্রেড'] = row.overall_grade || '-';
     rowData['মেধাক্রম'] = row.rank || '-';
@@ -171,8 +171,8 @@ const exportToExcel = () => {
     { wch: 30 }, // name
     ...uniqueSubjects.value.map(() => ({ wch: 15 })), // subjects
     { wch: 10 }, // total
+    { wch: 10 }, // obtained
     { wch: 10 }, // avg
-    { wch: 10 }, // percent
     { wch: 10 }, // gpa
     { wch: 10 }, // grade
     { wch: 10 }  // rank
@@ -288,8 +288,8 @@ const exportToExcel = () => {
               <th width="20%">শিক্ষার্থীদের নাম</th>
               <th v-for="subj in uniqueSubjects" :key="subj">{{ subj }}</th>
               <th width="6%">মোট</th>
+              <th width="6%">প্রাপ্ত</th>
               <th width="6%">গড়</th>
-              <th width="6%">শতাংশ</th>
               <th width="6%">জিপিএ</th>
               <th width="6%">গ্রেড</th>
               <th width="8%">মেধাক্রম</th>
@@ -302,9 +302,9 @@ const exportToExcel = () => {
               <td class="text-center" v-for="subj in uniqueSubjects" :key="subj">
                 {{ row.subjects[subj] !== undefined ? Number(row.subjects[subj].obtained_marks.toFixed(2)) : '-' }}
               </td>
+              <td class="text-center">{{ Number(row.total_full_marks.toFixed(2)) }}</td>
               <td class="text-center">{{ Number(row.total_marks.toFixed(2)) }}</td>
               <td class="text-center">{{ row.average_marks ? row.average_marks.toFixed(2) : '0.00' }}</td>
-              <td class="text-center">{{ row.percentage ? row.percentage.toFixed(2) : '0.00' }}%</td>
               <td class="text-center">{{ row.has_failed ? '0.00' : (row.gpa !== null && row.gpa !== undefined ? row.gpa.toFixed(2) : '0.00') }}</td>
               <td class="text-center">{{ row.overall_grade || '-' }}</td>
               <td class="text-center">{{ row.has_failed ? 'F' : (row.rank || '-') }}</td>
