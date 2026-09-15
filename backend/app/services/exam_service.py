@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 from typing import Any
 
 from fastapi import HTTPException
@@ -13,86 +14,122 @@ class ExamService:
     @staticmethod
     async def generate_exam_results(exam_id: uuid.UUID, session: AsyncSession) -> dict:
         """
-        For every ExamSchedule of this exam:
-          - Find all Enrollments whose class_id matches the schedule's class_id
-          - Auto-create any missing ExamResult row (obtained_marks=0, status=PRESENT)
-          - Re-calculate grade for all results of those schedules
-        This ensures result generation is strictly schedule-based:
-        a subject not in any schedule for this exam won't be touched.
+        Optimised result generation — 5 fixed queries regardless of class/student count.
+
+        Old approach: 1 query/schedule (enrollments) + 1 query/student (existing check)
+                      → e.g. 6 subjects × 200 students = 1 206 queries
+        New approach:
+          Q1 – all active schedules for the exam
+          Q2 – all active enrollments for the relevant class_ids  (batch .in_)
+          Q3 – all existing ExamResult rows (any is_deleted)      (batch .in_)
+          Q4 – grading scales
+          Q5 – all active results for grade recalculation          (after flush)
         """
         from app.models.student import Enrollment
 
-        # 1. Get all schedules for this exam
+        # ── Q1: schedules ─────────────────────────────────────────────────────
         schedules = (
-            await session.execute(select(ExamSchedule).where(ExamSchedule.exam_id == exam_id))
+            await session.execute(
+                select(ExamSchedule).where(
+                    ExamSchedule.exam_id == exam_id,
+                    ExamSchedule.is_deleted == False  # noqa: E712
+                )
+            )
         ).scalars().all()
+
         if not schedules:
             raise HTTPException(status_code=400, detail="No schedules found for this exam")
 
         schedule_ids = [s.id for s in schedules]
         schedule_map = {s.id: s for s in schedules}
 
-        # 2. For each schedule, find enrolled students in that class and auto-create missing results
-        created_count = 0
+        # class_id → [schedule, …]  (pure Python, no DB)
+        class_to_schedules: dict[uuid.UUID, list] = defaultdict(list)
         for sched in schedules:
-            enrollments = (
-                await session.execute(
-                    select(Enrollment).where(Enrollment.class_id == sched.class_id)
-                )
-            ).scalars().all()
+            class_to_schedules[sched.class_id].append(sched)
+        class_ids = list(class_to_schedules.keys())
 
-            for enrollment in enrollments:
-                # Check if result already exists for this enrollment + schedule
-                existing = (
-                    await session.execute(
-                        select(ExamResult).where(
-                            ExamResult.enrollment_id == enrollment.id,
-                            ExamResult.exam_schedule_id == sched.id,
-                        )
-                    )
-                ).scalar_one_or_none()
-
-                if not existing:
-                    new_result = ExamResult(
-                        enrollment_id=enrollment.id,
-                        exam_schedule_id=sched.id,
-                        obtained_marks=0.0,
-                        grade=None,
-                        status="PRESENT",
-                        tenant_id=enrollment.tenant_id,
-                    )
-                    session.add(new_result)
-                    created_count += 1
-
-        # Flush so newly created rows are queryable below
-        await session.flush()
-
-        # 3. Get grading scales
-        scales = (await session.execute(select(GradingScale))).scalars().all()
-
-        # 4. Re-calculate grades for all results belonging to this exam's schedules
-        results = (
+        # ── Q2: all enrollments for every relevant class (one batch query) ────
+        enrollments = (
             await session.execute(
-                select(ExamResult).where(ExamResult.exam_schedule_id.in_(schedule_ids))
+                select(Enrollment).where(
+                    Enrollment.class_id.in_(class_ids),
+                    Enrollment.is_deleted == False  # noqa: E712
+                )
             )
         ).scalars().all()
 
+        # ── Q3: existing result rows — deleted inclusive — for duplicate guard ─
+        # NOTE: is_deleted is intentionally NOT filtered here.
+        # A soft-deleted row still "owns" the (enrollment, schedule) slot and
+        # must not be recreated (that was the original source of duplicates).
+        existing_rows = (
+            await session.execute(
+                select(ExamResult).where(
+                    ExamResult.exam_schedule_id.in_(schedule_ids)
+                )
+            )
+        ).scalars().all()
+        existing_pairs: set[tuple[uuid.UUID, uuid.UUID]] = {
+            (r.enrollment_id, r.exam_schedule_id) for r in existing_rows
+        }
+
+        # ── Bulk-create missing result rows (single session.add_all) ──────────
+        new_results: list[ExamResult] = []
+        for enrollment in enrollments:
+            for sched in class_to_schedules[enrollment.class_id]:
+                if (enrollment.id, sched.id) not in existing_pairs:
+                    new_results.append(
+                        ExamResult(
+                            enrollment_id=enrollment.id,
+                            exam_schedule_id=sched.id,
+                            obtained_marks=0.0,
+                            grade=None,
+                            status="PRESENT",
+                            tenant_id=enrollment.tenant_id,
+                        )
+                    )
+
+        if new_results:
+            session.add_all(new_results)
+        # flush so newly inserted rows are visible to Q5 below
+        await session.flush()
+
+        # ── Q4: grading scales ────────────────────────────────────────────────
+        scales = (
+            await session.execute(
+                select(GradingScale).where(GradingScale.is_deleted == False)  # noqa: E712
+            )
+        ).scalars().all()
+        sorted_scales = sorted(scales, key=lambda s: s.min_marks, reverse=True)
+
+        # ── Q5: all active results for grade recalculation ────────────────────
+        all_active = (
+            await session.execute(
+                select(ExamResult).where(
+                    ExamResult.exam_schedule_id.in_(schedule_ids),
+                    ExamResult.is_deleted == False  # noqa: E712
+                )
+            )
+        ).scalars().all()
+
+        # ── Recalculate grades purely in Python — zero extra DB queries ───────
         updated_count = 0
-        for res in results:
+        for res in all_active:
             schedule = schedule_map.get(res.exam_schedule_id)
             if not schedule or schedule.full_marks == 0:
                 continue
 
-            status = getattr(res, "status", "PRESENT") or "PRESENT"
+            status = res.status or "PRESENT"
 
             if status != "PRESENT":
-                # Absent / Withheld / Expelled — use status string as grade marker
+                # ABSENT / WITHHELD / EXPELLED → use status as grade marker
                 assigned_grade = status
             else:
-                percentage = (res.obtained_marks / schedule.full_marks) * 100
+                pct = (res.obtained_marks / schedule.full_marks) * 100
                 assigned_grade = None
-                for scale in sorted(scales, key=lambda s: s.min_marks, reverse=True):
-                    if scale.min_marks <= percentage <= scale.max_marks:
+                for scale in sorted_scales:
+                    if scale.min_marks <= pct <= scale.max_marks:
                         assigned_grade = scale.grade_name
                         break
 
@@ -103,18 +140,19 @@ class ExamService:
         await session.commit()
         return {
             "message": (
-                f"Done. Created {created_count} missing result rows, "
+                f"Done. Created {len(new_results)} missing result rows, "
                 f"updated grades for {updated_count} results."
             )
         }
 
+    # ──────────────────────────────────────────────────────────────────────────
 
     @staticmethod
     async def validate_class_subject(
         class_id: uuid.UUID,
         subject_id: uuid.UUID,
         exam_id: uuid.UUID,
-        session: AsyncSession
+        session: AsyncSession,
     ) -> None:
         from app.models.academic import YearlyClassSubject
 
@@ -131,7 +169,7 @@ class ExamService:
         if not result.scalar_one_or_none():
             raise HTTPException(
                 status_code=400,
-                detail="This subject is not assigned to this class for the exam's academic year."
+                detail="This subject is not assigned to this class for the exam's academic year.",
             )
 
     @staticmethod
@@ -139,11 +177,11 @@ class ExamService:
         exam = await session.get(Exam, exam_id)
         if not exam:
             raise HTTPException(status_code=404, detail="Exam not found")
-            
+
         stmt = select(YearlyClassSubject.subject_id).where(
             YearlyClassSubject.academic_year_id == exam.academic_year_id
         ).distinct()
-        
+
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
@@ -152,7 +190,7 @@ class ExamService:
         session: AsyncSession,
         exam_id: uuid.UUID | None = None,
         academic_year_id: uuid.UUID | None = None,
-        class_id: uuid.UUID | None = None
+        class_id: uuid.UUID | None = None,
     ) -> list[dict]:
         from app.models.academic import (
             AcademicClass,
@@ -162,17 +200,21 @@ class ExamService:
         )
         from app.models.exam import GradingScale
         from app.models.student import Enrollment, Student
-        
+
         scales = (await session.execute(select(GradingScale))).scalars().all()
         grade_to_point = {scale.grade_name: scale.grade_point for scale in scales}
-        failing_grades = {scale.grade_name for scale in scales if hasattr(scale, 'is_pass') and not scale.is_pass}
-        
+        failing_grades = {
+            scale.grade_name
+            for scale in scales
+            if hasattr(scale, "is_pass") and not scale.is_pass
+        }
+
         fail_grade_name = "F"
         for scale in scales:
             if scale.min_marks <= 0 <= scale.max_marks:
                 fail_grade_name = scale.grade_name
                 break
-        
+
         stmt = select(
             ExamResult.enrollment_id,
             ExamResult.obtained_marks,
@@ -189,7 +231,7 @@ class ExamService:
             AcademicYear.name.label("academic_year_name"),
             Exam.name.label("exam_name"),
             Exam.id.label("exam_id"),
-            Subject.name.label("subject_name")
+            Subject.name.label("subject_name"),
         ).join(
             Enrollment, ExamResult.enrollment_id == Enrollment.id
         ).join(
@@ -206,10 +248,10 @@ class ExamService:
             Subject, ExamSchedule.subject_id == Subject.id
         ).outerjoin(
             YearlyClassSubject,
-            (YearlyClassSubject.subject_id == ExamSchedule.subject_id) &
-            (YearlyClassSubject.class_id == Enrollment.class_id) &
-            (YearlyClassSubject.academic_year_id == Enrollment.academic_year_id) &
-            (YearlyClassSubject.is_deleted == False)  # noqa: E712 — prevents duplicate rows from soft-deleted YCS entries
+            (YearlyClassSubject.subject_id == ExamSchedule.subject_id)
+            & (YearlyClassSubject.class_id == Enrollment.class_id)
+            & (YearlyClassSubject.academic_year_id == Enrollment.academic_year_id)
+            & (YearlyClassSubject.is_deleted == False),  # noqa: E712
         )
 
         if exam_id:
@@ -218,9 +260,9 @@ class ExamService:
             stmt = stmt.where(Enrollment.academic_year_id == academic_year_id)
         if class_id:
             stmt = stmt.where(Enrollment.class_id == class_id)
-            
+
         results = (await session.execute(stmt)).all()
-        
+
         merit_map: dict[tuple[uuid.UUID, uuid.UUID], dict[str, Any]] = {}
         for row in results:
             key = (row.enrollment_id, row.exam_id)
@@ -242,11 +284,11 @@ class ExamService:
                     "total_grade_points": 0.0,
                     "has_failed": False,
                     "special_status": None,
-                    "subjects": {}
+                    "subjects": {},
                 }
-            
+
             point = grade_to_point.get(row.grade, 0.0) if row.grade else 0.0
-            # Use dict assignment (keyed by subject name) — safe against duplicate join rows
+            # dict key = subject name → safe against duplicate join rows
             merit_map[key]["subjects"][row.subject_name] = {
                 "obtained_marks": row.obtained_marks,
                 "full_marks": row.full_marks,
@@ -254,10 +296,14 @@ class ExamService:
                 "grade_point": point,
                 "affects_result_calculation": row.affects_result_calculation,
             }
-            
+
             status = row.status.upper() if row.status else "PRESENT"
-            affects = row.affects_result_calculation if row.affects_result_calculation is not None else True
-            
+            affects = (
+                row.affects_result_calculation
+                if row.affects_result_calculation is not None
+                else True
+            )
+
             if affects:
                 if status in ("ABSENT", "WITHHELD", "EXPELLED"):
                     if merit_map[key]["special_status"] is None:
@@ -268,16 +314,26 @@ class ExamService:
 
         grouped_by_exam_class: dict[tuple[uuid.UUID, uuid.UUID], list[dict]] = {}
         for item in merit_map.values():
-            # Recompute totals from subjects dict — this is the source of truth and
-            # is immune to duplicate rows from the SQL join (dict keys overwrite silently).
             subjects = item["subjects"]
             item["total_marks"] = round(sum(s["obtained_marks"] for s in subjects.values()), 2)
             item["total_full_marks"] = sum(s["full_marks"] for s in subjects.values())
             item["total_subjects"] = len(subjects)
-            item["total_grade_points"] = round(sum(s["grade_point"] for s in subjects.values()), 4)
-            item["average_marks"] = round(item["total_marks"] / item["total_subjects"] if item["total_subjects"] > 0 else 0.0, 2)
-            item["percentage"] = round((item["total_marks"] / item["total_full_marks"]) * 100 if item["total_full_marks"] > 0 else 0.0, 2)
-            
+            item["total_grade_points"] = round(
+                sum(s["grade_point"] for s in subjects.values()), 4
+            )
+            item["average_marks"] = round(
+                item["total_marks"] / item["total_subjects"]
+                if item["total_subjects"] > 0
+                else 0.0,
+                2,
+            )
+            item["percentage"] = round(
+                (item["total_marks"] / item["total_full_marks"]) * 100
+                if item["total_full_marks"] > 0
+                else 0.0,
+                2,
+            )
+
             calculated_gpa = 0.0
             calculated_grade = "F"
             for scale in scales:
@@ -285,12 +341,14 @@ class ExamService:
                     calculated_gpa = scale.grade_point
                     calculated_grade = scale.grade_name
                     break
-            
+
             if item["has_failed"]:
                 item["total_marks"] = 0.0
                 item["average_marks"] = 0.0
                 item["percentage"] = 0.0
-                item["overall_status"] = item["special_status"] if item["special_status"] else "Fail"
+                item["overall_status"] = (
+                    item["special_status"] if item["special_status"] else "Fail"
+                )
                 item["overall_grade"] = fail_grade_name
                 item["gpa"] = 0.0
             else:
@@ -302,18 +360,18 @@ class ExamService:
             if group_key not in grouped_by_exam_class:
                 grouped_by_exam_class[group_key] = []
             grouped_by_exam_class[group_key].append(item)
-            
-        final_list = []
-        for group_key, students in grouped_by_exam_class.items():
+
+        final_list: list[dict] = []
+        for students in grouped_by_exam_class.values():
             sorted_students = sorted(
                 students,
-                key=lambda x: (x["has_failed"], -x["total_marks"])
+                key=lambda x: (x["has_failed"], -x["total_marks"]),
             )
-            
+
             rank = 1
             current_rank = 1
             prev_total = None
-            
+
             for s in sorted_students:
                 if s["has_failed"]:
                     s["rank"] = 0
@@ -323,10 +381,16 @@ class ExamService:
                     else:
                         current_rank = rank
                         s["rank"] = current_rank
-                    
                     prev_total = s["total_marks"]
                     rank += 1
                 final_list.append(s)
-                
-        final_list.sort(key=lambda x: (x["academic_year_name"], x["class_name"], x["exam_name"], x["rank"]))
+
+        final_list.sort(
+            key=lambda x: (
+                x["academic_year_name"],
+                x["class_name"],
+                x["exam_name"],
+                x["rank"],
+            )
+        )
         return final_list

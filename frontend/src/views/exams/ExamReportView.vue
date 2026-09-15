@@ -183,6 +183,41 @@ const exportToExcel = () => {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Merit List');
   XLSX.writeFile(workbook, `Merit_List_${selectedClassName.value || 'Report'}.xlsx`);
 };
+
+// Column Resizing Logic
+const resizingCol = ref<HTMLElement | null>(null);
+const startX = ref(0);
+const startWidth = ref(0);
+
+const startResize = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  const th = target.closest('th');
+  if (!th) return;
+  
+  resizingCol.value = th;
+  startX.value = e.pageX;
+  startWidth.value = th.offsetWidth;
+  
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', stopResize);
+};
+
+const handleMouseMove = (e: MouseEvent) => {
+  if (!resizingCol.value) return;
+  const dx = e.pageX - startX.value;
+  requestAnimationFrame(() => {
+    if (resizingCol.value) {
+      resizingCol.value.style.width = `${startWidth.value + dx}px`;
+      resizingCol.value.style.minWidth = `${startWidth.value + dx}px`;
+    }
+  });
+};
+
+const stopResize = () => {
+  resizingCol.value = null;
+  document.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseup', stopResize);
+};
 </script>
 
 <template>
@@ -284,15 +319,42 @@ const exportToExcel = () => {
         <table class="merit-table">
           <thead>
             <tr>
-              <th width="5%">ক্র.<br>নং</th>
-              <th width="20%">শিক্ষার্থীদের নাম</th>
-              <th v-for="subj in uniqueSubjects" :key="subj">{{ subj }}</th>
-              <th width="6%">মোট</th>
-              <th width="6%">প্রাপ্ত</th>
-              <th width="6%">গড়</th>
-              <th width="6%">জিপিএ</th>
-              <th width="6%">গ্রেড</th>
-              <th width="8%">মেধাক্রম</th>
+              <th width="5%" class="resizable-th">
+                ক্র.<br>নং
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="20%" class="resizable-th">
+                শিক্ষার্থীদের নাম
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th v-for="subj in uniqueSubjects" :key="subj" class="resizable-th">
+                {{ subj }}
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="6%" class="resizable-th">
+                মোট
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="6%" class="resizable-th">
+                প্রাপ্ত
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="6%" class="resizable-th">
+                গড়
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="6%" class="resizable-th">
+                জিপিএ
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="6%" class="resizable-th">
+                গ্রেড
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
+              <th width="8%" class="resizable-th">
+                মেধাক্রম
+                <div class="resizer no-print" @mousedown.prevent="startResize"></div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -488,6 +550,26 @@ const exportToExcel = () => {
 }
 .text-center {
   text-align: center;
+}
+
+/* Resizable Columns */
+.resizable-th {
+  position: relative;
+}
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+  height: 100%;
+  background-color: transparent;
+  z-index: 10;
+}
+.resizer:hover,
+.resizer:active {
+  background-color: #cbd5e1;
 }
 
 /* Print Styles */

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean, Date, Float, ForeignKey, String, Time
+from sqlalchemy import Boolean, Date, Float, ForeignKey, String, Time, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
@@ -35,7 +35,10 @@ class ExamSchedule(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin
 
 class ExamResult(Base, UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "exam_results"
-    __table_args__ = {"schema": "exam"}
+    __table_args__ = (
+        UniqueConstraint("enrollment_id", "exam_schedule_id", name="uq_exam_result_enrollment_schedule"),
+        {"schema": "exam"},
+    )
     enrollment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("student.enrollments.id"))
     exam_schedule_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("exam.exam_schedules.id"))
     obtained_marks: Mapped[float] = mapped_column(Float)

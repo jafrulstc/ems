@@ -30,6 +30,8 @@ const classes = ref<any[]>([]);
 
 const loading = ref(true);
 const markEntryLoading = ref(false);
+const savingMarks = ref(false);
+const generatingResults = ref(false);
 
 const selectedYearId = ref<string | null>(null);
 const selectedExamId = ref<string | null>(null);
@@ -315,7 +317,7 @@ const onClassChange = () => {
 
 const saveMarks = async () => {
   if (filteredResults.value.length === 0) return;
-  markEntryLoading.value = true;
+  savingMarks.value = true;
   try {
     await Promise.all(
       filteredResults.value.map(res => {
@@ -333,7 +335,7 @@ const saveMarks = async () => {
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Save Failed', detail: 'Failed to update marks', life: 3000 });
   } finally {
-    markEntryLoading.value = false;
+    savingMarks.value = false;
   }
 };
 
@@ -342,7 +344,7 @@ const generateResult = async () => {
     toast.add({ severity: 'warn', summary: 'Select Exam', detail: 'Please select an exam first.', life: 3000 });
     return;
   }
-  markEntryLoading.value = true;
+  generatingResults.value = true;
   try {
     const res = await ExamService.generateResults(selectedExamId.value);
     toast.add({ severity: 'success', summary: 'Results Generated', detail: res.message || 'Final exam results calculated!', life: 3000 });
@@ -350,7 +352,7 @@ const generateResult = async () => {
   } catch (e: any) {
     toast.add({ severity: 'error', summary: 'Generation Failed', detail: e?.response?.data?.detail || 'Failed to generate results', life: 3000 });
   } finally {
-    markEntryLoading.value = false;
+    generatingResults.value = false;
   }
 };
 </script>
@@ -476,7 +478,7 @@ const generateResult = async () => {
                 <option :value="null">-- Choose Exam --</option>
                 <option v-for="e in availableExamsForYear" :key="e.id" :value="e.id">{{ e.name }}</option>
               </select>
-              <Button label="Generate" icon="pi pi-cog" severity="success" @click="generateResult" :disabled="!selectedExamId" :loading="markEntryLoading"/>
+              <Button label="Generate" icon="pi pi-cog" severity="success" @click="generateResult" :disabled="!selectedExamId" :loading="generatingResults"/>
             </div>
           </div>
           
@@ -503,7 +505,7 @@ const generateResult = async () => {
         <div class="marks-table-card" v-if="filteredResults.length > 0">
           <div class="card-header">
             <h3>Student Marks Entry</h3>
-            <Button label="Save All Marks" icon="pi pi-save" @click="saveMarks" :loading="markEntryLoading" />
+            <Button label="Save All Marks" icon="pi pi-save" @click="saveMarks" :loading="savingMarks" />
           </div>
           <div style="overflow-x: auto;">
             <table class="marks-table">
