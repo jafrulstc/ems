@@ -128,8 +128,8 @@ class ExamService:
             else:
                 pct = (res.obtained_marks / schedule.full_marks) * 100
                 assigned_grade = None
-                for scale in sorted_scales:
-                    if scale.min_marks <= pct <= scale.max_marks:
+                for scale in sorted_scales:   # already sorted desc
+                    if pct >= scale.min_marks:
                         assigned_grade = scale.grade_name
                         break
 
@@ -334,10 +334,15 @@ class ExamService:
                 2,
             )
 
+            # Sort scales descending so the first match is the highest earned grade.
+            # Using `percentage >= scale.min_marks` (not `<= max_marks`) avoids
+            # the "gap" bug where a decimal like 59.29% falls between integer
+            # boundaries (বি max=59, এ- min=60) and matches nothing.
+            scales_desc = sorted(scales, key=lambda s: s.min_marks, reverse=True)
             calculated_gpa = 0.0
-            calculated_grade = "F"
-            for scale in scales:
-                if scale.min_marks <= item["percentage"] <= scale.max_marks:
+            calculated_grade = fail_grade_name   # sensible fallback (e.g. "এফ")
+            for scale in scales_desc:
+                if item["percentage"] >= scale.min_marks:
                     calculated_gpa = scale.grade_point
                     calculated_grade = scale.grade_name
                     break
